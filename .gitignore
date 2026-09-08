@@ -1,0 +1,8 @@
+*
+!*/
+!.gitignore
+!assets/
+!assets/**
+!assets-sakha/
+!assets-sakha/**
+!index.html
