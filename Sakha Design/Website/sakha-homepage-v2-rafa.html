@@ -2610,6 +2610,10 @@ function changeQty(i,delta){
   }
   cart[i].q=baru;
   renderCart();
+  // Halaman yang menampilkan baris keranjang ikut dibangun ulang, dari mana pun
+  // kuantitas diubah — termasuk dari dalam drawer.
+  if(/^#\/keranjang/.test(location.hash) ||
+     (/^#\/checkout/.test(location.hash) && checkoutStep === 1)) handleRouting();
 }
 // H3 — menghapus barang tidak bisa diurungkan, jadi selalu dikonfirmasi dulu.
 function removeItem(i){
@@ -2637,15 +2641,6 @@ function cartTerpilih(){
 // supaya tidak ada satu pun permukaan yang menjanjikan angka berbeda.
 function subtotalTerpilih(){
   return cartTerpilih().reduce(function(a,c){ return a + c.p*c.q; }, 0);
-}
-function addToCart(n,p,img,pid){
-  const existing=cart.find(c=>c.n===n);
-  // Menambah barang adalah niat membeli — baris yang tadinya tidak
-  // tercentang ikut tercentang lagi.
-  if(existing){existing.q++;existing.sel=true;}else{cart.push({n,p,img,q:1,pid:pid||pidByName(n)||null,sel:true});}
-  renderCart();
-  pulseCartBadge();
-  showToastAksi('✓ '+n+' masuk keranjang', 'Lihat Keranjang', '#/keranjang');
 }
 renderCart();
 
@@ -3462,6 +3457,7 @@ function viewProduk(id){
   if(demoIs('galat')) return '<div class="pg"><div class="container">'+errorBlock('detail produk')+'</div></div>';
   var related = PRODUCTS.filter(function(x){ return x.cat===p.cat && x.id!==p.id; }).slice(0,4);
   __pdpGrind = p.grinds ? p.grinds[2] : null;
+  __pdpQty = 1;
   var grindsHTML = p.grinds ? '<div class="pdp-field"><label>Gilingan</label><div class="pdp-opts">'+
     p.grinds.map(function(g,i){ return '<button class="opt-chip'+(i===2?' active':'')+'" type="button" onclick="pdpSelectGrind(this,\''+esc(g).replace(/'/g,"\\'")+'\')">'+esc(g)+'</button>'; }).join('')+
     '</div><span id="pdpGrindNote" style="font-size:11.5px;color:var(--muted);display:block;margin-top:7px">Gilingan dipilih: '+esc(p.grinds[2])+'</span></div>' : '';
@@ -3556,6 +3552,9 @@ function pdpTambah(id){
     // dilepas centangnya akan diam-diam tidak ikut checkout meski pengguna
     // baru saja menekan tambah.
     if(sama) sama.sel = true;
+    // Penjentangan baris di atas mengubah state cart — drawer, banner beranda,
+    // dan localStorage harus ikut tahu, walau tidak ada barang yang bertambah.
+    renderCart();
     // H9 — jelaskan kenapa tidak bertambah, bukan diam-diam mengabaikan klik.
     showToast('Kamu sudah punya '+sebelum+' di keranjang — itu seluruh stok yang tersisa.');
     return null;
@@ -3671,7 +3670,7 @@ function viewKeranjang(){
   setTimeout(cartSyncIndeterminate, 0);
 
   var terpilih = cartTerpilih();
-  var subtotal = subtotalTerpilih();
+  var T = checkoutTotals();
 
   var grup = cartGrup().map(function(g){
     var baris = g.idx.map(function(i){
@@ -3684,7 +3683,7 @@ function viewKeranjang(){
         '<img src="'+esc(item.img)+'" alt="'+esc(item.n)+'">'+
         '<div class="cr-info"><b>'+esc(item.n)+'</b><span>'+varian+'</span>'+
           '<span class="cr-unit">'+rupiah(item.p)+' / pcs</span></div>'+
-        '<div class="qty-stepper"><button onclick="changeQty('+i+',-1);navigate(\'#/keranjang\')"'+(item.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+item.q+'</span><button onclick="changeQty('+i+',1);navigate(\'#/keranjang\')"'+(item.q>=batasBaris(item)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div>'+
+        '<div class="qty-stepper"><button onclick="changeQty('+i+',-1)"'+(item.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+item.q+'</span><button onclick="changeQty('+i+',1)"'+(item.q>=batasBaris(item)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div>'+
         '<div class="cr-price">'+rupiah(item.p*item.q)+'</div>'+
         '<div class="cr-aksi">'+
           '<button type="button" class="cr-link" onclick="removeItem('+i+')">Hapus</button>'+
@@ -3715,13 +3714,14 @@ function viewKeranjang(){
         grup+
       '</div>'+
       '<div class="cart-summary"><h3>Ringkasan</h3>'+
-        '<div class="sum-row"><span>Subtotal ('+terpilih.length+' produk)</span><b>'+rupiah(subtotal)+'</b></div>'+
-        (subtotal >= FREE_SHIP_THRESHOLD
+        '<div class="sum-row"><span>Subtotal ('+terpilih.length+' produk)</span><b>'+rupiah(T.subtotal)+'</b></div>'+
+        (T.diskon > 0 ? '<div class="sum-row disc"><span>Diskon voucher</span><b>-'+rupiah(T.diskon)+'</b></div>' : '')+
+        (T.gratisOngkir
           ? '<div class="sum-row disc"><span>Ongkir</span><b>GRATIS</b></div>'
-          : '<div class="sum-row"><span>Gratis ongkir</span><b style="font-weight:500">kurang '+rupiah(FREE_SHIP_THRESHOLD-subtotal)+'</b></div>')+
-        '<div class="sum-row sum-total"><span>Total</span><b>'+rupiah(subtotal)+'</b></div>'+
+          : '<div class="sum-row"><span>Gratis ongkir</span><b style="font-weight:500">kurang '+rupiah(FREE_SHIP_THRESHOLD-(T.subtotal-T.diskon))+'</b></div>')+
+        '<div class="sum-row sum-total"><span>Total</span><b>'+rupiah(T.subtotal-T.diskon)+'</b></div>'+
         (bisaCheckout
-          ? '<a class="btn btn-primary" style="width:100%" href="#/checkout">Lanjut ke Pengiriman →</a>'
+          ? '<a class="btn btn-primary" style="width:100%" href="#/checkout" onclick="mulaiCheckoutBaru()">Lanjut ke Pengiriman →</a>'
           : '<button class="btn btn-primary" style="width:100%" disabled>Lanjut ke Pengiriman →</button>'+
             '<p class="cart-kosong-note">Pilih minimal satu produk untuk checkout.</p>')+
         voucherPickerHTML()+
@@ -3736,6 +3736,16 @@ var selectedPayMethod = null;
 var checkoutKurir = null;        // { id, nama, estimasi, harga }
 var checkoutVoucher = null;      // kode voucher yang sedang dipakai
 var checkoutAlamatId = null;     // id alamat tersimpan yang dipilih
+
+// Setiap kali checkout dimasuki dari keranjang, wizard dimulai dari awal.
+// Isi keranjang bisa sudah berubah sejak kunjungan sebelumnya, jadi kurir dan
+// voucher dari sesi lama tidak boleh ikut terbawa. Alamat tersimpan sengaja
+// dipertahankan — itu preferensi, bukan pilihan sekali pakai.
+function mulaiCheckoutBaru(){
+  checkoutStep = 1;
+  checkoutVoucher = null;
+  checkoutKurir = null;
+}
 
 // Daftar item di checkout tetap perlu indeks aslinya di `cart`, karena
 // changeQty() bekerja atas indeks itu. Memetakan hasil filter saja akan
@@ -3813,7 +3823,7 @@ function viewCheckout(){
   var body;
   if(checkoutStep===1){
     body = '<div class="co-form"><h3>Keranjang</h3>'+
-      idxCO.map(function(i){ var it = cart[i]; return '<div class="cart-row"><img src="'+esc(it.img)+'" alt=""><div class="cr-info"><b>'+esc(it.n)+'</b><span>200gr</span></div><div class="qty-stepper"><button onclick="changeQty('+i+',-1);navigate(\'#/checkout\')"'+(it.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+it.q+'</span><button onclick="changeQty('+i+',1);navigate(\'#/checkout\')"'+(it.q>=batasBaris(it)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div><div class="cr-price">'+rupiah(it.p*it.q)+'</div></div>'; }).join('')+
+      idxCO.map(function(i){ var it = cart[i]; return '<div class="cart-row"><img src="'+esc(it.img)+'" alt=""><div class="cr-info"><b>'+esc(it.n)+'</b><span>200gr</span></div><div class="qty-stepper"><button onclick="changeQty('+i+',-1)"'+(it.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+it.q+'</span><button onclick="changeQty('+i+',1)"'+(it.q>=batasBaris(it)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div><div class="cr-price">'+rupiah(it.p*it.q)+'</div></div>'; }).join('')+
       '<button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="checkoutStep=2;navigate(\'#/checkout\')">Lanjut ke Alamat →</button>'+
     '</div>';
   } else if(checkoutStep===2){
@@ -3882,6 +3892,14 @@ function placeOrder(btn){
   denganProses(btn || document.getElementById('btnBuatPesanan'), 'Memproses pesanan…', function(){ placeOrderLanjut(); });
 }
 function placeOrderLanjut(){
+  // Keranjang bisa berubah setelah halaman ini dirender — misalnya barang
+  // terakhir dihapus lewat drawer. Tanpa penjaga ini, pesanan kosong bisa
+  // terbit lengkap dengan ongkir.
+  if(!cartTerpilih().length){
+    showToast('Tidak ada produk terpilih untuk dipesan.');
+    navigate('#/keranjang');
+    return;
+  }
   var id = 'SKH-'+String(Date.now()).slice(-8);
   var pm = PAYMENTS.find(function(p){ return p.id===selectedPayMethod; }) || PAYMENTS[0];
   var T = checkoutTotals();
@@ -5332,13 +5350,20 @@ function closeOverlaysOnNavigate(){
 }
 var lastHandledHash = '';
 var acctReferrerHash = '';
+var __hashTerakhirRender = null;
 function handleRouting(){
   var h = location.hash;
   if(typeof updateB2bChrome==='function') updateB2bChrome();
   var homeView = document.getElementById('homeView');
   var routed = document.getElementById('routedView');
   if(!homeView || !routed) return;
-  closeOverlaysOnNavigate();
+  // Menggulir ke atas dan menutup overlay adalah perilaku BERPINDAH halaman.
+  // Merender ulang halaman yang sedang dibuka — yang terjadi tiap kali checkbox
+  // atau stepper keranjang diklik — bukan perpindahan, jadi posisi gulir, fokus,
+  // dan drawer yang terbuka harus dibiarkan apa adanya.
+  var pindahHalaman = (location.hash !== __hashTerakhirRender);
+  __hashTerakhirRender = location.hash;
+  if(pindahHalaman) closeOverlaysOnNavigate();
   if(!h || h==='#' || h==='#/'){
     homeView.classList.remove('hidden'); routed.classList.add('hidden'); routed.innerHTML='';
     return;
@@ -5381,7 +5406,7 @@ function handleRouting(){
   var html = matched ? matched.view(m,q) : view404();
   routed.innerHTML = html;
   hydrateImages(routed);
-  if(!pertahankanScroll) window.scrollTo(0,0);
+  if(pindahHalaman && !pertahankanScroll) window.scrollTo(0,0);
   if(typeof setMobileNavH==='function') setMobileNavH();
   if(path === '#/otp' || path === '#/verifikasi-email') siapkanLayarOtp();
   // Loyalitas kini satu halaman; path lama diarahkan ke bagiannya masing-masing.
@@ -6025,7 +6050,7 @@ function applyFilterHome(){
 var __renderCartAsli = renderCart;
 renderCart = function(){ __renderCartAsli(); saveState(); };
 
-addToCart = function(n, p, img, pid, grind){
+var addToCart = function(n, p, img, pid, grind){
   pid = pid || pidByName(n);
   var sama = cart.find(function(c){ return c.n === n && (c.grind||null) === (grind||null); });
   if(sama){ sama.q++; sama.sel = true; }
@@ -6927,9 +6952,9 @@ UJI_SUITE.push(function(){
   var r = pdpTambah('p3');
   uji('T9 pdpTambah mengembalikan indeks baris', typeof (r && r.i), 'number');
   uji('T9 baris baru adalah produk yang diminta', cart[r.i].pid, 'p3');
-  cart.forEach(function(c, k){ c.sel = (k === r.i); });
-  uji('T9 hanya item itu yang terpilih',
-      cartTerpilih().map(function(c){ return c.pid; }), ['p3']);
+  // "Hanya item itu yang terpilih" adalah tanggung jawab pdpBeliSekarang(),
+  // bukan pdpTambah() — diuji lewat pemanggilan sungguhan di blok FIX 6
+  // di bawah, bukan ditiru ulang di sini.
   uji('T9 barang lain tetap ada di keranjang', cart.length, 3);
   // Menambah lagi produk yang sama harus menyatu ke baris yang sama.
   var r2 = pdpTambah('p3');
@@ -6982,12 +7007,40 @@ UJI_SUITE.push(function(){
   cart.length = 0;
   cart.push({n:'A', p:1000, img:'', q:2, pid:'p1', grind:null, sel:true});
   var h = viewKeranjang();
-  // Halaman keranjang harus membangun ulang dirinya setelah kuantitas berubah —
-  // renderCart() saja hanya menyentuh drawer, bukan halaman ini.
-  uji('T10 stepper keranjang ikut merender ulang halaman',
-      /changeQty\(0,-1\);navigate\('#\/keranjang'\)/.test(h), true);
+  // FIX 4: render ulang setelah mengubah kuantitas kini satu-satunya
+  // tanggung jawab changeQty() sendiri — markup halaman tidak lagi
+  // menempelkan navigate() di lokasi pemanggilan (dua mekanisme jadi satu).
+  uji('T10 stepper keranjang tidak lagi menempelkan navigate di markup',
+      /changeQty\(0,-1\);navigate/.test(h), false);
   uji('T10 tombol hapus tidak menavigasi sebelum konfirmasi',
       /removeItem\(0\);navigate/.test(h), false);
+  cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
+});
+UJI_SUITE.push(function(){
+  // FIX 4: changeQty() sendiri yang membangun ulang halaman yang menampilkan
+  // baris keranjang — termasuk saat dipanggil dari dalam drawer — bukan lagi
+  // lewat navigate() yang ditulis di masing-masing lokasi pemanggilan.
+  var simpan = cart.slice(), hashAsli = location.hash;
+  var aslinya = handleRouting, panggilan = 0;
+  handleRouting = function(){ panggilan++; };   // dihitung, tidak benar-benar merender
+
+  cart.length = 0;
+  cart.push({n:'A', p:1000, img:'', q:1, pid:'p1', grind:null, sel:true});
+
+  location.hash = '#/keranjang';
+  panggilan = 0;
+  changeQty(0, 1);
+  uji('FIX4 changeQty di halaman keranjang membangun ulang halaman', panggilan > 0, true);
+  uji('FIX4 changeQty tetap mengubah kuantitas di keranjang', cart[0].q, 2);
+
+  location.hash = '#/akun/alamat';
+  panggilan = 0;
+  changeQty(0, 1);
+  uji('FIX4 changeQty di rute lain tidak menulis ulang halaman', panggilan, 0);
+  uji('FIX4 changeQty tetap mengubah kuantitas walau halaman tidak dibangun ulang', cart[0].q, 3);
+
+  handleRouting = aslinya;
+  location.hash = hashAsli;
   cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
 });
 UJI_SUITE.push(function(){
@@ -7068,18 +7121,211 @@ UJI_SUITE.push(function(){
   checkoutVoucher = vA;
 });
 UJI_SUITE.push(function(){
+  // FIX 6: membaca href yang SUNGGUH ditulis renderCart(), bukan menghitung
+  // ulang angka yang sama lalu membandingkannya dengan dirinya sendiri.
+  // document.getElementById mengembalikan stub baru tiap dipanggil, jadi
+  // dimemoisasi supaya elemen yang dibaca sesudahnya adalah elemen yang
+  // sama yang ditulisi renderCart().
   var simpan = cart.slice();
   cart.length = 0;
   cart.push({n:'Mahal tak dipilih', p:250000, img:'', q:1, pid:'p5', grind:null, sel:false});
-  cart.push({n:'Murah dipilih',     p:10000,  img:'', q:1, pid:'p1', grind:null, sel:true });
+  cart.push({n:'Murah dipilih',     p:10000,  img:'', q:2, pid:'p1', grind:null, sel:true });
 
-  // Pesan WhatsApp mendaftar semua barang, jadi totalnya harus menjumlahkan
-  // semua barang juga — bukan angka checkout.
-  var totalSemua = cart.reduce(function(a,c){ return a+c.p*c.q; }, 0);
-  uji('T11 total WA menjumlahkan seluruh daftar yang ditulisnya', totalSemua, 260000);
-  uji('T11 total WA memang berbeda dari subtotal checkout',
-      totalSemua === subtotalTerpilih(), false);
+  var asliGetById = document.getElementById, cache = {};
+  document.getElementById = function(id){
+    if(!(id in cache)) cache[id] = asliGetById.call(document, id);
+    return cache[id];
+  };
+  try{
+    renderCart();
+    var btn = cache['cartWaBtn'];
+    var href = (btn && btn.href) || '';
+    var teks = decodeURIComponent(href.split('text=')[1] || '');
+    var cocok = /Total:\s*Rp\s*([\d.,]+)/.exec(teks);
+    var totalDibaca = cocok ? parseInt(cocok[1].replace(/\D/g,''), 10) : NaN;
+    var totalSeharusnya = cart.reduce(function(a,c){ return a+c.p*c.q; }, 0);
+    uji('T11 total WA yang sungguh ditulis renderCart menjumlahkan seluruh keranjang',
+        totalDibaca, totalSeharusnya);
+    uji('T11 total WA yang sungguh ditulis memang berbeda dari subtotal checkout',
+        totalDibaca === subtotalTerpilih(), false);
+  } finally {
+    document.getElementById = asliGetById;
+  }
 
+  cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
+});
+
+// ── FINAL FIX WAVE — uji tambahan ────────────────────────────────────────
+UJI_SUITE.push(function(){
+  // FIX 1: merender ulang halaman yang sedang dibuka (dipicu tiap centang
+  // atau stepper keranjang) tidak boleh menggulir ke atas atau menutup
+  // overlay — itu perilaku BERPINDAH halaman, bukan render ulang di tempat.
+  var hashAsli = location.hash, asliScroll = window.scrollTo, n = 0;
+  window.scrollTo = function(){ n++; };
+  location.hash = '#/keranjang'; handleRouting(); // pindah ke sini
+  n = 0;
+  handleRouting(); handleRouting();               // render ulang di tempat
+  uji('FINAL render ulang di halaman yang sama tidak menggulir ke atas', n, 0);
+  location.hash = '#/katalog'; n = 0; handleRouting();
+  uji('FINAL berpindah halaman tetap menggulir ke atas', n > 0, true);
+  window.scrollTo = asliScroll; location.hash = hashAsli;
+});
+UJI_SUITE.push(function(){
+  // FIX 2: masuk checkout dari keranjang selalu memulai wizard dari awal —
+  // kurir dan voucher sesi lama tidak boleh terbawa ke basket yang baru.
+  var alamatSimpan = checkoutAlamatId;
+  var stepSimpan = checkoutStep, vSimpan = checkoutVoucher, kSimpan = checkoutKurir;
+  checkoutStep = 3; checkoutVoucher = 'SAKHA10'; checkoutKurir = {id:'x'};
+  checkoutAlamatId = 'alamat-tetap';
+  mulaiCheckoutBaru();
+  uji('FIX2 mulaiCheckoutBaru mereset checkoutStep', checkoutStep, 1);
+  uji('FIX2 mulaiCheckoutBaru mereset checkoutVoucher', checkoutVoucher, null);
+  uji('FIX2 mulaiCheckoutBaru mereset checkoutKurir', checkoutKurir, null);
+  uji('FIX2 mulaiCheckoutBaru mempertahankan checkoutAlamatId', checkoutAlamatId, 'alamat-tetap');
+  checkoutAlamatId = alamatSimpan;
+  checkoutStep = stepSimpan; checkoutVoucher = vSimpan; checkoutKurir = kSimpan;
+});
+UJI_SUITE.push(function(){
+  // FIX 3: keranjang bisa kosong setelah halaman checkout dirender (mis.
+  // barang terakhir dihapus lewat drawer) — placeOrderLanjut() sendiri harus
+  // menolak menerbitkan pesanan kosong, bukan hanya bergantung pada guard
+  // render-time yang sengaja dilewati untuk melindungi form yang sedang diisi.
+  var simpanCart = cart.slice(), simpanOrders = ORDERS.slice();
+  cart.length = 0; // keranjang kosong total
+  var jumlahSebelum = ORDERS.length;
+  var asliNavigate = navigate, tujuan = [];
+  navigate = function(h){ tujuan.push(h); };
+  try{ placeOrderLanjut(); } finally { navigate = asliNavigate; }
+  uji('FIX3 placeOrderLanjut menolak keranjang kosong', ORDERS.length, jumlahSebelum);
+  uji('FIX3 placeOrderLanjut mengarahkan kembali ke keranjang', tujuan, ['#/keranjang']);
+  ORDERS.length = 0; simpanOrders.forEach(function(o){ ORDERS.push(o); });
+  cart.length = 0; simpanCart.forEach(function(c){ cart.push(c); });
+});
+UJI_SUITE.push(function(){
+  // FIX 5: halaman keranjang mengutip checkoutTotals(), bukan menghitung
+  // ulang ambang gratis ongkirnya sendiri — voucher yang menurunkan subtotal
+  // terpilih di bawah ambang tidak boleh lagi dijanjikan gratis ongkir palsu.
+  var simpanCart = cart.slice(), vSimpan = checkoutVoucher, kSimpan = checkoutKurir;
+  cart.length = 0;
+  // subtotal 210.000 — di atas ambang 200.000
+  cart.push({n:'Barang', p:210000, img:'', q:1, pid:'p1', grind:null, sel:true});
+  checkoutVoucher = null; checkoutKurir = null;
+  uji('FIX5 sebelum voucher: checkoutTotals menganggap gratis ongkir',
+      checkoutTotals().gratisOngkir, true);
+
+  checkoutVoucher = 'NGOPI25K'; // potongan Rp25.000 -> 185.000, di bawah ambang
+  var T = checkoutTotals();
+  uji('FIX5 setelah voucher: checkoutTotals TIDAK lagi gratis ongkir', T.gratisOngkir, false);
+
+  var h = viewKeranjang();
+  var halamanBilangGratis = h.indexOf('<span>Ongkir</span><b>GRATIS</b>') >= 0;
+  uji('FIX5 halaman keranjang sepakat dengan checkoutTotals soal gratis ongkir',
+      halamanBilangGratis, T.gratisOngkir);
+  uji('FIX5 halaman keranjang menampilkan baris diskon voucher',
+      h.indexOf('Diskon voucher') >= 0, true);
+  uji('FIX5 total di halaman keranjang sudah mengurangi diskon',
+      h.indexOf('<span>Total</span><b>'+rupiah(T.subtotal-T.diskon)+'</b>') >= 0, true);
+
+  cart.length = 0; simpanCart.forEach(function(c){ cart.push(c); });
+  checkoutVoucher = vSimpan; checkoutKurir = kSimpan;
+});
+UJI_SUITE.push(function(){
+  // FIX 6.1/6.2: pdpBeliSekarang() dipanggil sungguhan (bukan logikanya
+  // ditiru ulang di dalam uji) — hanya baris yang dibeli yang tercentang,
+  // baris lama tetap ada, dan wizard checkout dimulai dari awal.
+  var simpanCart = cart.slice(), alamatSimpan = checkoutAlamatId;
+  cart.length = 0;
+  cart.push({n:'Lama A', p:1000, img:'', q:1, pid:'p1', grind:null, sel:true});
+  cart.push({n:'Lama B', p:2000, img:'', q:1, pid:'p5', grind:null, sel:true});
+
+  checkoutStep = 3; checkoutVoucher = 'SAKHA10'; checkoutKurir = {id:'x'};
+  checkoutAlamatId = 'alamat-uji';
+
+  var asliNavigate = navigate, tujuan = [];
+  navigate = function(h){ tujuan.push(h); };
+  try{ pdpBeliSekarang('p3'); } finally { navigate = asliNavigate; }
+
+  uji('FIX6 pdpBeliSekarang memanggil navigate ke checkout', tujuan, ['#/checkout']);
+  uji('FIX6 pdpBeliSekarang barang lama tetap ada di keranjang', cart.length, 3);
+  uji('FIX6 pdpBeliSekarang hanya satu baris terpilih', cartTerpilih().length, 1);
+  uji('FIX6 pdpBeliSekarang baris terpilih adalah produk yang dibeli',
+      cartTerpilih()[0].pid, 'p3');
+  uji('FIX6 pdpBeliSekarang mereset checkoutStep', checkoutStep, 1);
+  uji('FIX6 pdpBeliSekarang mereset checkoutVoucher', checkoutVoucher, null);
+  uji('FIX6 pdpBeliSekarang mereset checkoutKurir', checkoutKurir, null);
+  uji('FIX6 pdpBeliSekarang mempertahankan checkoutAlamatId', checkoutAlamatId, 'alamat-uji');
+
+  cart.length = 0; simpanCart.forEach(function(c){ cart.push(c); });
+  checkoutAlamatId = alamatSimpan;
+  checkoutStep = 1; checkoutVoucher = null; checkoutKurir = null;
+});
+UJI_SUITE.push(function(){
+  // FIX 6.3 / FIX 9: baris yang sudah mencapai batas stok dan sedang tidak
+  // tercentang harus tetap dicentang ulang meski penambahannya gagal — dan
+  // renderCart() dipanggil supaya drawer/banner/localStorage ikut tahu.
+  var simpan = cart.slice(), qSimpan = __pdpQty, gSimpan = __pdpGrind;
+  var p = prod('p1'), maks = batasQty(p);
+  // pdpTambah mencocokkan baris lewat nama + gilingan; gilingan baris uji
+  // harus sama dengan yang akan dihitung pdpTambah sendiri (default
+  // p.grinds[2] saat __pdpGrind kosong), supaya baris ini yang tersentuh.
+  var grindDefault = p.grinds ? p.grinds[2] : null;
+  cart.length = 0;
+  cart.push({n:p.name, p:p.price, img:'', q:maks, pid:'p1', grind:grindDefault, sel:false});
+  __pdpQty = 1; __pdpGrind = null;
+
+  var r = pdpTambah('p1');
+  uji('FIX6 pdpTambah pada baris maksimal mengembalikan null', r, null);
+  uji('FIX6 pdpTambah mencentang ulang baris yang sudah maksimal', cart[0].sel, true);
+  uji('FIX6 pdpTambah tidak mengubah kuantitas baris maksimal', cart[0].q, maks);
+
+  cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
+  __pdpQty = qSimpan; __pdpGrind = gSimpan;
+});
+UJI_SUITE.push(function(){
+  // FIX 6.4: placeOrderLanjut() dipanggil sungguhan — pesanan yang terbit
+  // hanya berisi barang terpilih, dan barang yang tidak terpilih tetap
+  // tersisa di keranjang.
+  var simpanCart = cart.slice(), simpanOrders = ORDERS.slice();
+  var stepSimpan = checkoutStep, vSimpan = checkoutVoucher, kSimpan = checkoutKurir,
+      pmSimpan = selectedPayMethod, alamatSimpan = checkoutAlamatId;
+  cart.length = 0;
+  cart.push({n:'Dibeli', p:10000, img:'', q:2, pid:'p1', grind:null, sel:true});
+  cart.push({n:'Tidak dibeli', p:5000, img:'', q:1, pid:'p5', grind:null, sel:false});
+  checkoutVoucher = null; checkoutKurir = null; selectedPayMethod = null;
+
+  var asliNavigate = navigate, tujuan = [];
+  navigate = function(h){ tujuan.push(h); };
+  var jumlahSebelum = ORDERS.length;
+  try{ placeOrderLanjut(); } finally { navigate = asliNavigate; }
+
+  uji('FIX6 placeOrderLanjut membuat satu pesanan baru', ORDERS.length, jumlahSebelum + 1);
+  uji('FIX6 placeOrderLanjut hanya menyertakan barang terpilih',
+      ORDERS[0].items.map(function(it){ return it.p; }), ['p1']);
+  uji('FIX6 placeOrderLanjut menyisakan barang tak terpilih di keranjang',
+      cart.map(function(c){ return c.pid; }), ['p5']);
+
+  ORDERS.length = 0; simpanOrders.forEach(function(o){ ORDERS.push(o); });
+  cart.length = 0; simpanCart.forEach(function(c){ cart.push(c); });
+  checkoutStep = stepSimpan; checkoutVoucher = vSimpan; checkoutKurir = kSimpan;
+  selectedPayMethod = pmSimpan; checkoutAlamatId = alamatSimpan;
+});
+UJI_SUITE.push(function(){
+  // FIX 7: kuantitas PDP tidak boleh terbawa dari produk sebelumnya.
+  var qSimpan = __pdpQty, gSimpan = __pdpGrind;
+  __pdpQty = 5;
+  viewProduk('p3');
+  uji('FIX7 __pdpQty direset ke 1 saat membuka produk lain', __pdpQty, 1);
+  __pdpQty = qSimpan; __pdpGrind = gSimpan;
+});
+UJI_SUITE.push(function(){
+  // FIX 8: definisi addToCart yang mati sudah dihapus; hanya override A12
+  // (5 parameter: n,p,img,pid,grind) yang tersisa, dan ia masih berfungsi.
+  uji('FIX8 addToCart hanya satu definisi (5 parameter)', addToCart.length, 5);
+  var simpan = cart.slice();
+  cart.length = 0;
+  addToCart('Uji Produk', 15000, '', 'p1', 'Halus');
+  uji('FIX8 addToCart masih berfungsi', cart.length, 1);
+  uji('FIX8 addToCart menyimpan gilingan', cart[0].grind, 'Halus');
   cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
 });
 
