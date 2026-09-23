@@ -2928,7 +2928,6 @@ function viewKatalog(q){
     '</div></div>';
 }
 
-
 // ── §F1 FACET KATALOG ───────────────────────────────────────────
 // Semua facet diturunkan dari field produk yang sudah ada —
 // tidak ada field baru yang ditambahkan ke PRODUCTS untuk ini.
@@ -6203,6 +6202,19 @@ function uji(nama, aktual, harapan){
     console.error('FAIL ' + nama + '\n  harapan: ' + h + '\n  aktual : ' + a);
   }
 }
+// Varian `uji` untuk objek peta (mis. hitungan per facet). `uji` biasa
+// membandingkan lewat JSON.stringify sehingga URUTAN KUNCI ikut dinilai —
+// padahal objek hitungan dibangun dengan mengiterasi PRODUCTS, jadi urutannya
+// kebetulan belaka. Di sini kunci diurutkan dulu supaya yang diuji benar-benar
+// isinya, bukan kebetulan urutan datanya.
+function ujiPeta(nama, aktual, harapan){
+  function rapikan(o){
+    var keluar = {};
+    Object.keys(o).sort().forEach(function(k){ keluar[k] = o[k]; });
+    return keluar;
+  }
+  uji(nama, rapikan(aktual || {}), rapikan(harapan || {}));
+}
 function selfTest(){
   __ujiGagal = 0; __ujiTotal = 0;
   UJI_SUITE.forEach(function(f){ f(); });
@@ -6240,8 +6252,8 @@ UJI_SUITE.push(function(){
 
   var pro = {};
   PRODUCTS.forEach(function(p){ var f = prosesFacet(p); pro[f] = (pro[f]||0)+1; });
-  uji('T2 proses', pro,
-      {'washed':3,'natural':5,'giling-basah':1,'semi-washed':2,'honey':1});
+  ujiPeta('T2 proses', pro,
+      {'washed':3,'natural':5,'semi-washed':2,'honey':1,'giling-basah':1});
   uji('T2 semi-washed tidak bocor ke washed',
       PRODUCTS.filter(function(p){ return prosesFacet(p)==='washed'; })
               .map(function(p){ return p.id; }), ['p1','p5','p12']);
@@ -6250,7 +6262,7 @@ UJI_SUITE.push(function(){
 
   var ras = {};
   PRODUCTS.forEach(function(p){ rasaFamili(p).forEach(function(f){ ras[f] = (ras[f]||0)+1; }); });
-  uji('T2 rasa', ras, {'buah':8,'floral':3,'manis':6,'cokelat':6,'kacang':4});
+  ujiPeta('T2 rasa', ras, {'buah':8,'manis':6,'cokelat':6,'kacang':4,'floral':3});
 
   var dipetakan = {};
   RASA_FAMILI.forEach(function(f){ f.notes.forEach(function(n){ dipetakan[n] = true; }); });
