@@ -1206,6 +1206,24 @@ html[data-theme="dark"] .gal-slider img{filter:brightness(.92);}
 .filter-panel .chip[aria-pressed="true"]{background:var(--blue-vulcan);color:var(--tan);border-color:var(--blue-vulcan);}
 .filter-foot{display:flex;gap:10px;justify-content:flex-end;}
 
+/* Katalog dua kolom: sidebar filter kiri + grid kanan */
+.katalog-body{display:grid;grid-template-columns:260px 1fr;gap:32px;align-items:start;}
+.katalog-sidebar{position:sticky;top:96px;border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);padding:18px 20px;}
+.facet-grup{border:0;padding:0;margin:0 0 18px;}
+.facet-grup legend{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;padding:0;margin-bottom:9px;}
+.facet-opt{display:flex;align-items:center;gap:8px;font-size:13px;padding:4px 0;cursor:pointer;}
+.facet-opt.off{opacity:.45;cursor:not-allowed;}
+.facet-opt input{accent-color:var(--burnt-sienna);flex:0 0 auto;}
+.facet-label{flex:1;}
+.facet-count{font-size:11.5px;color:var(--muted);}
+.katalog-filter-toggle{display:none;}
+@media (max-width:900px){
+  .katalog-body{grid-template-columns:1fr;}
+  .katalog-sidebar{position:static;display:none;margin-bottom:18px;}
+  .katalog-sidebar.open{display:block;}
+  .katalog-filter-toggle{display:inline-flex;}
+}
+
 /* ── PDP: galeri thumbnail, wishlist, ingatkan stok, daftar ulasan ── */
 .pdp-thumbs{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap;}
 .pdp-thumbs button{width:62px;height:62px;border-radius:var(--radius-md);overflow:hidden;border:1.5px solid var(--border);background:var(--surface);padding:0;}
@@ -2852,82 +2870,125 @@ function sortList(list, sort){
   });
   return l;
 }
-function katalogURL(cat, sort, harga, kw){
+// Urutan ini menentukan urutan parameter di URL — dibuat stabil supaya
+// dua kombinasi filter yang sama selalu menghasilkan tautan yang sama.
+var KATALOG_PARAM = ['kategori','promo','harga','sangrai','proses','rasa','sort','q'];
+
+function katalogURLq(q){
   var qs = [];
-  if(cat && cat !== 'Semua') qs.push('kategori='+encodeURIComponent(cat));
-  if(sort && sort !== 'relevan') qs.push('sort='+sort);
-  if(harga) qs.push('harga='+harga);
-  if(kw) qs.push('q='+encodeURIComponent(kw));
+  KATALOG_PARAM.forEach(function(k){
+    var v = q[k];
+    if(!v) return;
+    if(k === 'sort' && v === 'relevan') return;
+    if(k === 'kategori' && v === 'Semua') return;
+    qs.push(k + '=' + encodeURIComponent(v));
+  });
   return '#/katalog' + (qs.length ? '?' + qs.join('&') : '');
 }
-// Dipakai tombol di toolbar: baca query saat ini, ganti satu bagian, navigasi.
-function katalogSet(bagian, nilai){
-  var q = parseHashQuery(location.hash);
-  q[bagian] = nilai;
-  navigate(katalogURL(q.kategori, q.sort, q.harga, q.q));
+
+// Pembungkus tanda tangan lama — dipertahankan supaya pemanggil yang
+// belum diubah tetap jalan.
+function katalogURL(cat, sort, harga, kw){
+  return katalogURLq({
+    kategori: (cat && cat !== 'Semua') ? cat : '',
+    sort: sort, harga: harga, q: kw
+  });
 }
-function katalogToggleHarga(id){
+
+// Grup pilih-banyak: klik menambah/mencabut satu nilai.
+function katalogToggle(grup, id){
   var q = parseHashQuery(location.hash);
-  navigate(katalogURL(q.kategori, q.sort, q.harga === id ? '' : id, q.q));
+  var arr = qList(q, grup);
+  var i = arr.indexOf(id);
+  if(i >= 0) arr.splice(i, 1); else arr.push(id);
+  q[grup] = arr.join(',');
+  navigate(katalogURLq(q));
 }
+
+// Grup pilih-satu (harga). Mengklik nilai yang sedang aktif akan melepasnya.
+function katalogSetTunggal(grup, id){
+  var q = parseHashQuery(location.hash);
+  q[grup] = (q[grup] === id) ? '' : id;
+  navigate(katalogURLq(q));
+}
+
+// Atur Ulang membuang semua filter tapi mempertahankan kata kunci
+// pencarian — pengguna sedang menyaring hasil kata kunci itu.
 function katalogReset(){
   var q = parseHashQuery(location.hash);
-  navigate(katalogURL(q.kategori, '', '', ''));
+  navigate(katalogURLq({ q: q.q || '' }));
 }
-function toggleFilterPanel(btn){
-  var pn = document.getElementById('filterPanel');
-  if(!pn) return;
-  var open = !pn.classList.contains('open');
-  pn.classList.toggle('open', open);
-  btn.setAttribute('aria-expanded', String(open));
+
+// Di bawah 900px sidebar disembunyikan dan dibuka lewat tombol ⚙ Filter.
+function toggleKatalogSidebar(btn){
+  var sb = document.getElementById('katalogSidebar');
+  if(!sb) return;
+  var buka = !sb.classList.contains('open');
+  sb.classList.toggle('open', buka);
+  btn.setAttribute('aria-expanded', String(buka));
 }
-function katalogToolbarHTML(q, jumlah){
-  var sort = q.sort || 'relevan', harga = q.harga || '';
-  var opts = SORT_OPTS.map(function(s){
-    return '<option value="'+s.id+'"'+(s.id===sort?' selected':'')+'>'+esc(s.label)+'</option>';
+// Satu grup facet. `tipe` = 'checkbox' (pilih banyak) atau 'radio' (pilih satu).
+// onclick dipakai, bukan onchange: radio yang sudah tercentang tidak memicu
+// onchange, sehingga tidak bisa dilepas kembali.
+function facetGrupHTML(judul, grup, items, q, tipe){
+  var dipilih = (tipe === 'radio') ? (q[grup] ? [q[grup]] : []) : qList(q, grup);
+  var baris = items.map(function(it){
+    var n = facetCount(q, grup, it.id);
+    var on = dipilih.indexOf(it.id) >= 0;
+    var mati = (n === 0 && !on);
+    var fn = (tipe === 'radio')
+      ? "katalogSetTunggal('" + grup + "','" + it.id + "')"
+      : "katalogToggle('" + grup + "','" + it.id + "')";
+    return '<label class="facet-opt' + (mati ? ' off' : '') + '">' +
+      '<input type="' + tipe + '" name="facet-' + grup + '"' +
+        (on ? ' checked' : '') + (mati ? ' disabled' : '') +
+        ' onclick="' + fn + '">' +
+      '<span class="facet-label">' + esc(it.label) + '</span>' +
+      '<span class="facet-count">(' + n + ')</span>' +
+    '</label>';
   }).join('');
-  var chips = HARGA_RANGE.map(function(h){
-    return '<button type="button" class="chip" aria-pressed="'+(harga===h.id)+'" onclick="katalogToggleHarga(\''+h.id+'\')">'+esc(h.label)+'</button>';
-  }).join('');
-  var aktif = (sort!=='relevan'?1:0) + (harga?1:0);
-  return '<div class="cat-toolbar">'+
-      '<span class="count grow">'+jumlah+' produk ditemukan'+(aktif?' · '+aktif+' filter aktif':'')+'</span>'+
-      '<button type="button" class="filter-toggle" aria-expanded="'+(harga?'true':'false')+'" onclick="toggleFilterPanel(this)">⚙ Filter</button>'+
-      '<label class="visually-hidden" for="sortSel">Urutkan produk</label>'+
-      '<select class="sortsel" id="sortSel" onchange="katalogSet(\'sort\', this.value)">'+opts+'</select>'+
-    '</div>'+
-    '<div class="filter-panel'+(harga?' open':'')+'" id="filterPanel">'+
-      '<h6>Rentang harga</h6><div class="chip-row">'+chips+'</div>'+
-      '<div class="filter-foot"><button class="btn btn-ghost btn-sm" type="button" onclick="katalogReset()">Atur Ulang</button></div>'+
-    '</div>';
+  return '<fieldset class="facet-grup"><legend>' + esc(judul) + '</legend>' +
+         baris + '</fieldset>';
+}
+
+function katalogSidebarHTML(q){
+  // 'Semua' di CATS_ALL adalah penanda UI, bukan kategori produk.
+  var katItems = CATS_ALL.filter(function(c){ return c !== 'Semua'; })
+    .map(function(c){ return { id: c, label: c }; });
+  return '<aside class="katalog-sidebar" id="katalogSidebar" aria-label="Filter produk">' +
+    facetGrupHTML('Program Promo', 'promo',    PROMO_FACETS,    q, 'checkbox') +
+    facetGrupHTML('Rentang Harga', 'harga',    HARGA_RANGE,     q, 'radio')    +
+    facetGrupHTML('Kategori',      'kategori', katItems,        q, 'checkbox') +
+    facetGrupHTML('Level Sangrai', 'sangrai',  SANGRAI_FACETS,  q, 'checkbox') +
+    facetGrupHTML('Proses',        'proses',   PROSES_FACETS,   q, 'checkbox') +
+    facetGrupHTML('Catatan Rasa',  'rasa',     RASA_FAMILI,     q, 'checkbox') +
+    '<button class="btn btn-ghost btn-sm" type="button" onclick="katalogReset()">Atur Ulang</button>' +
+  '</aside>';
 }
 
 function viewKatalog(q){
   q = q || {};
-  var activeCat = q.kategori || 'Semua';
-  var kw = (q.q||'').toLowerCase();
-  var sumber = demoProducts();
-  var list = sumber.filter(function(p){
-    var okCat = activeCat==='Semua' || p.cat===activeCat;
-    var okKw = !kw || p.name.toLowerCase().indexOf(kw)>=0 || p.notes.join(' ').toLowerCase().indexOf(kw)>=0;
-    var okHarga = !q.harga || (HARGA_RANGE.find(function(h){ return h.id===q.harga; })||{uji:function(){return true;}}).uji(p.price);
-    return okCat && okKw && okHarga;
-  });
-  list = sortList(list, q.sort);
-  var tabs = CATS_ALL.map(function(c){
-    return '<button class="filter-tab'+(c===activeCat?' active':'')+'" onclick="navigate(katalogURL(\''+c+'\',\''+(q.sort||'')+'\',\''+(q.harga||'')+'\',\''+(q.q||'')+'\'))">'+esc(c)+'</button>';
-  }).join('');
+  var list = sortList(katalogFilter(q), q.sort);
   var isi;
   if(demoIs('memuat'))      isi = skeletonFor('grid', 8);
   else if(demoIs('galat'))  isi = errorBlock('katalog');
   else if(list.length)      isi = '<div class="product-grid">'+list.map(pcardHTML).join('')+'</div>';
-  else                      isi = emptyState('☕','Tidak ada produk', 'Coba kategori, rentang harga, atau kata kunci lain.', '<a class="btn btn-secondary" href="#/katalog">Lihat Semua Produk</a>');
+  else                      isi = emptyState('☕','Tidak ada produk',
+                                   'Filternya terlalu sempit — coba lepas satu, atau atur ulang semuanya.',
+                                   '<button class="btn btn-secondary" type="button" onclick="katalogReset()">Atur Ulang Filter</button>');
   return '<div class="pg katalog-pg">'+
     '<div class="container">'+
       pgHead([{href:'#/',label:'Beranda'},{href:'#/katalog',label:'Katalog'}], 'Semua Produk', 'Katalog <em>Kopi Sakha</em>', 'Dari specialty single-origin sampai blend harian — semua ada di sini.')+
-      '<div class="filter-tabs">'+tabs+'</div>'+
-      katalogToolbarHTML(q, list.length)+
-      isi+
+      '<div class="katalog-body">'+
+        katalogSidebarHTML(q)+
+        '<div class="katalog-main">'+
+          '<div class="cat-toolbar">'+
+            '<span class="count grow">'+list.length+' produk ditemukan</span>'+
+            '<button type="button" class="filter-toggle katalog-filter-toggle" aria-expanded="false" aria-controls="katalogSidebar" onclick="toggleKatalogSidebar(this)">⚙ Filter</button>'+
+          '</div>'+
+          isi+
+        '</div>'+
+      '</div>'+
     '</div></div>';
 }
 
@@ -6385,6 +6446,28 @@ UJI_SUITE.push(function(){
   uji('T3 sort terlaris masih jalan',
       sortList(PRODUCTS, 'terlaris')[0].sold,
       Math.max.apply(null, PRODUCTS.map(function(p){ return p.sold; })));
+});
+UJI_SUITE.push(function(){
+  uji('T4 URL kosong', katalogURLq({}), '#/katalog');
+  uji('T4 URL satu grup', katalogURLq({kategori:'Specialty'}),
+      '#/katalog?kategori=Specialty');
+  uji('T4 URL multi-nilai dikodekan',
+      katalogURLq({kategori:'Specialty,Coffee Drip'}),
+      '#/katalog?kategori=Specialty%2CCoffee%20Drip');
+  uji('T4 sort relevan tidak ditulis', katalogURLq({sort:'relevan'}), '#/katalog');
+  uji('T4 urutan parameter stabil',
+      katalogURLq({sort:'terbaru', kategori:'Specialty', promo:'diskon'}),
+      '#/katalog?kategori=Specialty&promo=diskon&sort=terbaru');
+  // Bolak-balik: URL yang dibuat harus terbaca lagi jadi nilai yang sama.
+  var asal = {kategori:'Specialty,Coffee Drip', sangrai:'2,3', harga:'sedang'};
+  var balik = parseHashQuery(katalogURLq(asal));
+  uji('T4 bolak-balik kategori', qList(balik,'kategori'), ['Specialty','Coffee Drip']);
+  uji('T4 bolak-balik sangrai', qList(balik,'sangrai'), ['2','3']);
+  uji('T4 bolak-balik harga', balik.harga, 'sedang');
+  // Pembungkus lama harus tetap menghasilkan tautan yang sah.
+  uji('T4 pembungkus lama', katalogURL('Specialty','','',''),
+      '#/katalog?kategori=Specialty');
+  uji('T4 pembungkus lama abaikan Semua', katalogURL('Semua','','',''), '#/katalog');
 });
 
 </script>
