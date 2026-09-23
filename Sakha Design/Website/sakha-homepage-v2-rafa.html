@@ -2578,11 +2578,17 @@ function renderCart(){
   // Modul Integrasi WhatsApp: isi pesan panel keranjang otomatis berisi ringkasan isi keranjang + total
   const cartWaBtn=document.getElementById('cartWaBtn');
   if(cartWaBtn){
+    // Pesan WhatsApp mendaftar SELURUH isi keranjang (ini pertanyaan tentang
+    // keranjang, bukan transaksi), jadi totalnya pun dihitung dari seluruh
+    // keranjang. Sengaja BERBEDA dari subtotalTerpilih() yang dipakai untuk
+    // uang yang akan ditagih — yang penting, angka di sini cocok dengan
+    // daftar yang tertulis tepat di atasnya.
+    const subtotalWa = cart.reduce((a,c)=>a+c.p*c.q,0);
     const waMsg = cart.length===0
       ? 'Halo Sakha Coffee, saya ingin bertanya tentang produk kopi kalian.'
       : 'Halo Sakha Coffee, saya ingin checkout produk berikut:\n'
         + cart.map(c=>`- ${c.n} x${c.q} (${fmtRupiah(c.p*c.q)})`).join('\n')
-        + `\nTotal: ${fmtRupiah(subtotal)}`;
+        + `\nTotal: ${fmtRupiah(subtotalWa)}`;
     cartWaBtn.href='https://wa.me/6281234567890?text='+encodeURIComponent(waMsg);
   }
 }
@@ -3664,7 +3670,7 @@ function viewKeranjang(){
   setTimeout(cartSyncIndeterminate, 0);
 
   var terpilih = cartTerpilih();
-  var subtotal = terpilih.reduce(function(a,c){ return a+c.p*c.q; }, 0);
+  var subtotal = subtotalTerpilih();
 
   var grup = cartGrup().map(function(g){
     var baris = g.idx.map(function(i){
@@ -3752,7 +3758,7 @@ function checkoutTotals(){
 }
 function pakaiVoucher(code){
   var v = voucherByCode(code);
-  var subtotal = cartTerpilih().reduce(function(a,c){ return a + c.p*c.q; }, 0);
+  var subtotal = subtotalTerpilih();
   if(!v){ showToast('Kode voucher tidak dikenali.'); return; }
   if(v.terpakai){ showToast('Voucher '+v.code+' sudah pernah dipakai.'); return; }
   if(subtotal < v.minSpend){ showToast('Minimal belanja '+rupiah(v.minSpend)+' untuk voucher ini.'); return; }
@@ -3765,7 +3771,7 @@ function pakaiVoucherInput(){
   if(el) pakaiVoucher(el.value);
 }
 function voucherPickerHTML(){
-  var subtotal = cartTerpilih().reduce(function(a,c){ return a + c.p*c.q; }, 0);
+  var subtotal = subtotalTerpilih();
   var tersedia = VOUCHERS.filter(function(v){ return !v.terpakai; });
   var chips = tersedia.length ? tersedia.map(function(v){
     var bisa = subtotal >= v.minSpend;
@@ -7059,6 +7065,21 @@ UJI_SUITE.push(function(){
 
   cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
   checkoutVoucher = vA;
+});
+UJI_SUITE.push(function(){
+  var simpan = cart.slice();
+  cart.length = 0;
+  cart.push({n:'Mahal tak dipilih', p:250000, img:'', q:1, pid:'p5', grind:null, sel:false});
+  cart.push({n:'Murah dipilih',     p:10000,  img:'', q:1, pid:'p1', grind:null, sel:true });
+
+  // Pesan WhatsApp mendaftar semua barang, jadi totalnya harus menjumlahkan
+  // semua barang juga — bukan angka checkout.
+  var totalSemua = cart.reduce(function(a,c){ return a+c.p*c.q; }, 0);
+  uji('T11 total WA menjumlahkan seluruh daftar yang ditulisnya', totalSemua, 260000);
+  uji('T11 total WA memang berbeda dari subtotal checkout',
+      totalSemua === subtotalTerpilih(), false);
+
+  cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
 });
 
 </script>
