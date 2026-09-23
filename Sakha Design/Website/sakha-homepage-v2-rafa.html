@@ -1198,12 +1198,6 @@ html[data-theme="dark"] .gal-slider img{filter:brightness(.92);}
 .sortsel{appearance:none;background:var(--surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234A6460' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center/14px;border:1.5px solid var(--border);color:var(--ink);font-family:var(--font-body);font-size:12.5px;font-weight:600;padding:10px 34px 10px 15px;border-radius:var(--radius-pill);}
 .filter-toggle{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1.5px solid var(--border);color:var(--ink);font-size:12.5px;font-weight:600;padding:10px 17px;border-radius:var(--radius-pill);}
 .filter-toggle[aria-expanded="true"],.filter-toggle:hover{border-color:var(--burnt-sienna);color:var(--burnt-sienna);}
-.filter-panel{border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);padding:18px 20px;margin-bottom:22px;display:none;}
-.filter-panel.open{display:block;}
-.filter-panel h6{font-size:10.5px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:800;margin:0 0 10px;}
-.filter-panel .chip-row{margin-bottom:14px;}
-.filter-panel .chip{cursor:pointer;}
-.filter-panel .chip[aria-pressed="true"]{background:var(--blue-vulcan);color:var(--tan);border-color:var(--blue-vulcan);}
 .filter-foot{display:flex;gap:10px;justify-content:flex-end;}
 
 /* Katalog dua kolom: sidebar filter kiri + grid kanan */
@@ -2874,6 +2868,12 @@ function sortList(list, sort){
 // dua kombinasi filter yang sama selalu menghasilkan tautan yang sama.
 var KATALOG_PARAM = ['kategori','promo','harga','sangrai','proses','rasa','sort','q'];
 
+// Hanya state tampilan mobile: sidebar terbuka atau tidak. Sengaja TIDAK
+// masuk URL — ini bukan sesuatu yang layak ikut ter-bookmark atau terbagi.
+// Disimpan di luar fungsi render karena handleRouting() mengganti seluruh
+// innerHTML setiap kali filter diklik, sehingga kelas di DOM ikut hilang.
+var __katalogFilterBuka = false;
+
 function katalogURLq(q){
   var qs = [];
   KATALOG_PARAM.forEach(function(k){
@@ -2921,11 +2921,10 @@ function katalogReset(){
 
 // Di bawah 900px sidebar disembunyikan dan dibuka lewat tombol ⚙ Filter.
 function toggleKatalogSidebar(btn){
+  __katalogFilterBuka = !__katalogFilterBuka;
   var sb = document.getElementById('katalogSidebar');
-  if(!sb) return;
-  var buka = !sb.classList.contains('open');
-  sb.classList.toggle('open', buka);
-  btn.setAttribute('aria-expanded', String(buka));
+  if(sb) sb.classList.toggle('open', __katalogFilterBuka);
+  if(btn) btn.setAttribute('aria-expanded', String(__katalogFilterBuka));
 }
 // Satu grup facet. `tipe` = 'checkbox' (pilih banyak) atau 'radio' (pilih satu).
 // onclick dipakai, bukan onchange: radio yang sudah tercentang tidak memicu
@@ -2955,7 +2954,7 @@ function katalogSidebarHTML(q){
   // 'Semua' di CATS_ALL adalah penanda UI, bukan kategori produk.
   var katItems = CATS_ALL.filter(function(c){ return c !== 'Semua'; })
     .map(function(c){ return { id: c, label: c }; });
-  return '<aside class="katalog-sidebar" id="katalogSidebar" aria-label="Filter produk">' +
+  return '<aside class="katalog-sidebar'+(__katalogFilterBuka?' open':'')+'" id="katalogSidebar" aria-label="Filter produk">' +
     facetGrupHTML('Program Promo', 'promo',    PROMO_FACETS,    q, 'checkbox') +
     facetGrupHTML('Rentang Harga', 'harga',    HARGA_RANGE,     q, 'radio')    +
     facetGrupHTML('Kategori',      'kategori', katItems,        q, 'checkbox') +
@@ -2984,7 +2983,7 @@ function viewKatalog(q){
         '<div class="katalog-main">'+
           '<div class="cat-toolbar">'+
             '<span class="count grow">'+list.length+' produk ditemukan</span>'+
-            '<button type="button" class="filter-toggle katalog-filter-toggle" aria-expanded="false" aria-controls="katalogSidebar" onclick="toggleKatalogSidebar(this)">⚙ Filter</button>'+
+            '<button type="button" class="filter-toggle katalog-filter-toggle" aria-expanded="'+__katalogFilterBuka+'" aria-controls="katalogSidebar" onclick="toggleKatalogSidebar(this)">⚙ Filter</button>'+
           '</div>'+
           isi+
         '</div>'+
