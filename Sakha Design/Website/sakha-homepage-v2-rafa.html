@@ -6606,21 +6606,27 @@ UJI_SUITE.push(function(){
 });
 UJI_SUITE.push(function(){
   // Sumber halaman dibaca dari DOM kalau tersedia (browser), atau dari harness
-  // kalau berjalan headless. Memeriksa markup mentah, bukan DOM, supaya uji ini
-  // benar-benar bisa GAGAL di kedua lingkungan — versi sebelumnya memakai
-  // document.querySelectorAll yang selalu kosong di harness, jadi selalu lulus.
+  // kalau berjalan headless.
   var sumber = (typeof document !== 'undefined' && document.documentElement &&
                 document.documentElement.outerHTML) ||
                (typeof __HTML_SUMBER__ !== 'undefined' ? __HTML_SUMBER__ : '');
+
+  // Kalau sumbernya kosong, uji ini tidak sedang memeriksa apa pun. Lebih baik
+  // gagal keras daripada lulus diam-diam — persis jebakan yang membuat versi
+  // pertama uji ini selalu hijau.
+  uji('T6 sumber halaman terbaca', sumber.length > 1000, true);
+
+  // Hanya markup yang dipindai. Blok <script> dibuang lebih dulu karena isinya
+  // memuat href yang dirakit dinamis (breadcrumb PDP) DAN teks uji ini sendiri —
+  // keduanya bukan tautan sungguhan dan akan jadi false positive.
+  var markup = sumber.replace(/<script\b[\s\S]*?<\/script>/gi, '');
+
   var kategoriNyata = {};
   PRODUCTS.forEach(function(p){ kategoriNyata[p.cat] = true; });
   var awalan = 'href="#/katalog?kategori=';
   var mati = [];
-  (sumber.match(/href="#\/katalog\?kategori=([^"]*)"/g) || []).forEach(function(h){
+  (markup.match(/href="#\/katalog\?kategori=([^"]*)"/gi) || []).forEach(function(h){
     var nilai = h.slice(awalan.length, -1);
-    // Lewati href yang dirakit di dalam JS (mengandung kutip atau penyambung) —
-    // itu bukan tautan literal di markup.
-    if(nilai.indexOf("'") >= 0 || nilai.indexOf('+') >= 0) return;
     decodeURIComponent(nilai).split(',').forEach(function(c){
       if(c && !kategoriNyata[c] && mati.indexOf(c) < 0) mati.push(c);
     });
