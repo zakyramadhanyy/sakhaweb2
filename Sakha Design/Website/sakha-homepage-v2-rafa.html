@@ -2928,6 +2928,73 @@ function viewKatalog(q){
     '</div></div>';
 }
 
+
+// ── §F1 FACET KATALOG ───────────────────────────────────────────
+// Semua facet diturunkan dari field produk yang sudah ada —
+// tidak ada field baru yang ditambahkan ke PRODUCTS untuk ini.
+
+// Satu nilai di URL boleh berisi banyak pilihan, dipisah koma.
+// String kosong menghasilkan array kosong, bukan ['']. 
+function qList(q, kunci){
+  var v = (q && q[kunci]) || '';
+  return v ? v.split(',').filter(Boolean) : [];
+}
+
+var PROMO_FACETS = [
+  {id:'diskon',   label:'Diskon',        uji:function(p){ return !!p.oldPrice; }},
+  {id:'baru',     label:'Baru',          uji:function(p){ return p.badge === 'new'; }},
+  {id:'terbatas', label:'Stok Terbatas', uji:function(p){ return p.stock <= 10; }}
+];
+
+// Nilai roastLevel yang benar-benar ada di data hanya 2, 3, 4.
+// Level 1 dan 5 sengaja tidak ditampilkan karena tidak punya produk.
+var SANGRAI_FACETS = [
+  {id:'2', label:'Terang–Sedang'},
+  {id:'3', label:'Sedang'},
+  {id:'4', label:'Sedang–Gelap'}
+];
+
+// p.process berupa teks bebas ('Natural + infus anggur', 'Giling basah + …'),
+// jadi dicocokkan lewat substring. URUTAN INI MENGIKAT: 'Semi-washed'
+// mengandung kata 'washed', jadi harus diuji lebih dulu — kalau tidak,
+// p7 dan p8 ikut tersaring saat pengguna memilih Washed.
+var PROSES_FACETS = [
+  {id:'semi-washed',  label:'Semi-washed',  cocok:'semi-washed'},
+  {id:'honey',        label:'Honey',        cocok:'honey'},
+  {id:'giling-basah', label:'Giling basah', cocok:'giling basah'},
+  {id:'natural',      label:'Natural',      cocok:'natural'},
+  {id:'washed',       label:'Washed',       cocok:'washed'}
+];
+function prosesFacet(p){
+  var t = String(p.process || '').toLowerCase();
+  for(var i = 0; i < PROSES_FACETS.length; i++){
+    if(t.indexOf(PROSES_FACETS[i].cocok) >= 0) return PROSES_FACETS[i].id;
+  }
+  return null;
+}
+
+// 24 catatan rasa untuk 12 produk, mayoritas muncul sekali — kalau
+// ditampilkan mentah jadi 24 kontrol yang masing-masing menyisakan satu
+// produk. Dipetakan ke lima keluarga. Pencocokan memakai kesamaan persis
+// (indexOf pada array), bukan substring: 'Manis Asam' adalah catatan buah,
+// bukan varian dari 'Manis'.
+var RASA_FAMILI = [
+  {id:'buah',    label:'Buah & Sitrus',     notes:['Jeruk Nipis','Anggur','Blueberry','Peach','Buah Tropis','Stroberi','Beri Merah','Wine','Manis Asam']},
+  {id:'manis',   label:'Manis & Krim',      notes:['Manis','Krim','Susu','Vanila','Madu','Pastry']},
+  {id:'cokelat', label:'Cokelat & Karamel', notes:['Cokelat','Cokelat Gelap','Karamel','Brown Sugar']},
+  {id:'kacang',  label:'Kacang & Rempah',   notes:['Kacang','Rempah']},
+  {id:'floral',  label:'Floral & Herbal',   notes:['Floral','Teh Hitam','Segar']}
+];
+function rasaFamili(p){
+  var ns = p.notes || [];
+  var out = [];
+  RASA_FAMILI.forEach(function(f){
+    for(var i = 0; i < ns.length; i++){
+      if(f.notes.indexOf(ns[i]) >= 0){ out.push(f.id); return; }
+    }
+  });
+  return out;
+}
 // ── §V2 PENCARIAN (#/cari) ──────────────────────────────────────
 function viewCari(q){
   q = q || {};
@@ -6155,6 +6222,45 @@ UJI_SUITE.push(function(){
       ['p11','p2','p12','p10','p9','p8','p7','p6','p5','p4','p3','p1']);
   uji('T1 dua produk berbadge new adalah dua yang terbaru',
       urut.slice(0,2).sort(), ['p11','p2'].sort());
+});
+UJI_SUITE.push(function(){
+  uji('T2 qList kosong', qList({}, 'kategori'), []);
+  uji('T2 qList tunggal', qList({kategori:'Specialty'}, 'kategori'), ['Specialty']);
+  uji('T2 qList ganda', qList({kategori:'Specialty,Coffee Drip'}, 'kategori'),
+      ['Specialty','Coffee Drip']);
+
+  function jml(fn){ return PRODUCTS.filter(fn).length; }
+  uji('T2 promo diskon',   jml(function(p){ return PROMO_FACETS[0].uji(p); }), 4);
+  uji('T2 promo baru',     jml(function(p){ return PROMO_FACETS[1].uji(p); }), 2);
+  uji('T2 promo terbatas', jml(function(p){ return PROMO_FACETS[2].uji(p); }), 2);
+
+  uji('T2 sangrai 2', jml(function(p){ return p.roastLevel === 2; }), 7);
+  uji('T2 sangrai 3', jml(function(p){ return p.roastLevel === 3; }), 3);
+  uji('T2 sangrai 4', jml(function(p){ return p.roastLevel === 4; }), 2);
+
+  var pro = {};
+  PRODUCTS.forEach(function(p){ var f = prosesFacet(p); pro[f] = (pro[f]||0)+1; });
+  uji('T2 proses', pro,
+      {'washed':3,'natural':5,'giling-basah':1,'semi-washed':2,'honey':1});
+  uji('T2 semi-washed tidak bocor ke washed',
+      PRODUCTS.filter(function(p){ return prosesFacet(p)==='washed'; })
+              .map(function(p){ return p.id; }), ['p1','p5','p12']);
+  uji('T2 tiap produk dapat tepat satu facet proses',
+      PRODUCTS.filter(function(p){ return prosesFacet(p) === null; }).length, 0);
+
+  var ras = {};
+  PRODUCTS.forEach(function(p){ rasaFamili(p).forEach(function(f){ ras[f] = (ras[f]||0)+1; }); });
+  uji('T2 rasa', ras, {'buah':8,'floral':3,'manis':6,'cokelat':6,'kacang':4});
+
+  var dipetakan = {};
+  RASA_FAMILI.forEach(function(f){ f.notes.forEach(function(n){ dipetakan[n] = true; }); });
+  var tercecer = [];
+  PRODUCTS.forEach(function(p){
+    (p.notes||[]).forEach(function(n){ if(!dipetakan[n] && tercecer.indexOf(n)<0) tercecer.push(n); });
+  });
+  uji('T2 tidak ada catatan rasa yang tercecer', tercecer, []);
+  uji('T2 Manis Asam masuk buah, bukan manis',
+      rasaFamili({notes:['Manis Asam']}), ['buah']);
 });
 
 </script>
