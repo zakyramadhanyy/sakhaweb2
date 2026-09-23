@@ -501,6 +501,10 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 /* ── Toast ── */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border-left:4px solid var(--success);border-radius:8px;box-shadow:var(--shadow-lg);padding:14px 18px;font-size:13px;color:#333;z-index:500;display:flex;align-items:center;gap:10px;transform:translateY(20px);opacity:0;pointer-events:none;transition:all var(--t-base);}
 .toast.show{transform:translateY(0);opacity:1;}
+.toast-aksi{margin-left:8px;border:0;background:none;color:var(--burnt-sienna);font-weight:700;font-size:13px;cursor:pointer;text-decoration:underline;padding:0;}
+@keyframes badgePulse{0%{transform:scale(1);}35%{transform:scale(1.35);}100%{transform:scale(1);}}
+.badge-pulse{display:inline-block;animation:badgePulse .4s ease-out;}
+@media (prefers-reduced-motion: reduce){.badge-pulse{animation:none;}}
 @media (max-width:560px){.toast{left:16px;right:16px;bottom:16px;}}
 
 /* ── WA float button ── */
@@ -2592,9 +2596,8 @@ function addToCart(n,p,img,pid){
   // tercentang ikut tercentang lagi.
   if(existing){existing.q++;existing.sel=true;}else{cart.push({n,p,img,q:1,pid:pid||pidByName(n)||null,sel:true});}
   renderCart();
-  showToast('✓ '+n+' ditambahkan ke keranjang');
-  cartDrawer.classList.add('open');
-  toggleBackdrop();
+  pulseCartBadge();
+  showToastAksi('✓ '+n+' masuk keranjang', 'Lihat Keranjang', '#/keranjang');
 }
 renderCart();
 
@@ -2606,6 +2609,37 @@ function showToast(msg){
   t.classList.add('show');
   clearTimeout(toastTimer);
   toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// Umpan balik instan saat barang masuk keranjang: angka di badge
+// berdenyut sebentar, tanpa memindahkan pengguna ke mana pun.
+function pulseCartBadge(){
+  ['cartCount','mbbCartBadge'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(!el) return;
+    el.classList.remove('badge-pulse');
+    void el.offsetWidth;          // paksa reflow supaya animasi bisa diulang
+    el.classList.add('badge-pulse');
+  });
+}
+
+// Toast dengan satu tombol lanjutan. Pesan tetap masuk lewat textContent
+// (bukan innerHTML) supaya nama produk tidak pernah ditafsirkan sebagai
+// markup; hanya tombolnya yang ditambahkan sebagai elemen.
+function showToastAksi(pesan, label, hash){
+  var t = document.getElementById('toast');
+  t.textContent = pesan;
+  if(label){
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'toast-aksi';
+    b.textContent = label;
+    b.onclick = function(){ t.classList.remove('show'); navigate(hash); };
+    t.appendChild(b);
+  }
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 3000);
 }
 
 // ── Newsletter ──
@@ -3469,10 +3503,9 @@ function pdpAddToCart(id){
   else cart.push({ n:p.name, p:p.price, img:imgSrc(p.img), q:sesudah, pid:p.id, grind:grind, sel:true });
   renderCart();
   var masuk = sesudah - sebelum;
-  showToast('✓ '+p.name+' ×'+masuk+(grind?' ('+grind+')':'')+' masuk keranjang'+
-    (masuk < __pdpQty ? ' (dibatasi sisa stok)' : ''));
-  document.getElementById('cartDrawer').classList.add('open');
-  toggleBackdrop();
+  pulseCartBadge();
+  showToastAksi('✓ '+p.name+' ×'+masuk+(grind?' ('+grind+')':'')+' masuk keranjang'+
+    (masuk < __pdpQty ? ' (dibatasi sisa stok)' : ''), 'Lihat Keranjang', '#/keranjang');
   __pdpQty = 1;
   var el = document.getElementById('pdpQty'); if(el) el.textContent = '1';
 }
@@ -5794,9 +5827,8 @@ addToCart = function(n, p, img, pid, grind){
   if(sama){ sama.q++; sama.sel = true; }
   else { cart.push({ n:n, p:p, img:img, q:1, pid:pid, grind:grind||null, sel:true }); }
   renderCart();
-  showToast('✓ ' + n + ' ditambahkan ke keranjang');
-  document.getElementById('cartDrawer').classList.add('open');
-  toggleBackdrop();
+  pulseCartBadge();
+  showToastAksi('✓ ' + n + ' masuk keranjang', 'Lihat Keranjang', '#/keranjang');
 };
 
 // ── A13. PASANG SEMUA PENDENGAR + BOOT ───────────────────────────────
