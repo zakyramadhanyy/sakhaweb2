@@ -1249,6 +1249,23 @@ html[data-theme="dark"] .gal-slider img{filter:brightness(.92);}
 .rev-head .stars{color:var(--burnt-sienna);letter-spacing:1px;}
 .rev-item p{font-size:13.5px;color:var(--ink);line-height:1.65;}
 
+/* ── Keranjang: pengelompokan per kategori + checkbox selektif ── */
+.cart-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);margin-bottom:16px;}
+.cart-bar-all{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;}
+.cart-bar-n{font-size:12.5px;color:var(--muted);}
+.cart-grup{border:1.5px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);margin-bottom:16px;overflow:hidden;}
+.cart-grup-head{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1.5px solid var(--border);font-size:13px;}
+.cart-grup-n{font-size:11.5px;color:var(--muted);margin-left:auto;}
+.cart-cb,.cart-grup-head input{accent-color:var(--burnt-sienna);flex:0 0 auto;}
+.cart-grup .cart-row{padding:16px;}
+.cart-grup .cart-row:last-child{border-bottom:0;}
+.cart-row.off{opacity:.55;}
+.cr-unit{font-size:11.5px;color:var(--muted);}
+.cr-aksi{display:flex;flex-direction:column;gap:4px;align-items:flex-end;}
+.cr-link{font-size:11.5px;color:var(--muted);background:none;border:0;padding:0;cursor:pointer;text-decoration:underline;}
+.cr-link:hover{color:var(--burnt-sienna);}
+.cart-kosong-note{font-size:12px;color:var(--muted);margin-top:8px;text-align:center;}
+
 /* ── Rating bintang interaktif ── */
 /* Kartu daftar ulasan: sebelumnya menempel satu sama lain karena .simple-card
    tidak punya jarak bawah (bandingkan .ocard & .addr-card yang sudah punya). */
@@ -3552,6 +3569,62 @@ function pdpBeliSekarang(id){
   navigate('#/checkout');
 }
 
+// Baris keranjang menyimpan pid; pidByName jadi jaring pengaman untuk
+// baris lama yang tersimpan sebelum pid ikut dicatat. Baris yang tetap
+// tidak bisa diresolusi masuk grup 'Lainnya' — tidak boleh hilang.
+function cartKategori(item){
+  var p = prod(item.pid || pidByName(item.n));
+  return p ? p.cat : 'Lainnya';
+}
+
+// Mengembalikan grup terurut mengikuti CATS_ALL supaya susunannya stabil,
+// bukan mengikuti urutan penambahan barang.
+function cartGrup(){
+  var urut = CATS_ALL.filter(function(c){ return c !== 'Semua'; }).concat(['Lainnya']);
+  var peta = {};
+  cart.forEach(function(c, i){
+    var k = cartKategori(c);
+    if(!peta[k]) peta[k] = [];
+    peta[k].push(i);
+  });
+  return urut.filter(function(k){ return peta[k]; }).map(function(k){
+    var pertama = cart[peta[k][0]];
+    var p = prod(pertama.pid || pidByName(pertama.n));
+    return { cat:k, label: p ? p.catLabel : 'Lainnya', idx: peta[k] };
+  });
+}
+
+// Perubahan pilihan dipisah jadi dua lapis: fungsi murni yang hanya
+// menyentuh `cart`, dan pembungkus yang menambahkan simpan + render ulang.
+// Pemisahan ini yang membuat logikanya bisa diuji tanpa memicu render.
+function cartPilihSatu(i, on){ if(cart[i]) cart[i].sel = !!on; }
+function cartPilihSemua(on){ cart.forEach(function(c){ c.sel = !!on; }); }
+function cartPilihGrup(cat, on){
+  cart.forEach(function(c){ if(cartKategori(c) === cat) c.sel = !!on; });
+}
+
+function cartSetSel(i, on){      cartPilihSatu(i, on);  saveState(); handleRouting(); }
+function cartSetSelSemua(on){    cartPilihSemua(on);    saveState(); handleRouting(); }
+function cartSetSelGrup(cat, on){cartPilihGrup(cat, on); saveState(); handleRouting(); }
+
+// State "sebagian tercentang" tidak punya atribut HTML — hanya bisa diset
+// lewat properti DOM setelah markup terpasang.
+function cartSyncIndeterminate(){
+  cartGrup().forEach(function(g){
+    var el = document.getElementById('cbGrup-' + g.cat.replace(/\s+/g,'-'));
+    if(!el) return;
+    var n = g.idx.filter(function(i){ return cart[i].sel !== false; }).length;
+    el.checked = (n === g.idx.length);
+    el.indeterminate = (n > 0 && n < g.idx.length);
+  });
+  var semua = document.getElementById('cbSemua');
+  if(semua){
+    var t = cartTerpilih().length;
+    semua.checked = (t === cart.length && cart.length > 0);
+    semua.indeterminate = (t > 0 && t < cart.length);
+  }
+}
+
 // ── §V4 KERANJANG PENUH (#/keranjang) ───────────────────────────
 function viewKeranjang(){
   if(!cart.length){
@@ -3560,27 +3633,63 @@ function viewKeranjang(){
       emptyState('🛒','Keranjangmu masih kosong', 'Mulai dari best seller atau cari kopi favoritmu.', '<a class="btn btn-primary" href="#/katalog">Lihat Katalog</a>')+
     '</div></div>';
   }
-  var rows = cart.map(function(item,i){
-    return '<div class="cart-row">'+
-      '<img src="'+esc(item.img)+'" alt="'+esc(item.n)+'">'+
-      '<div class="cr-info"><b>'+esc(item.n)+'</b><span>200gr'+(item.grind?' · '+esc(item.grind):'')+'</span></div>'+
-      '<div class="qty-stepper"><button onclick="changeQty('+i+',-1)"'+(item.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+item.q+'</span><button onclick="changeQty('+i+',1)"'+(item.q>=batasBaris(item)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div>'+
-      '<div class="cr-price">'+rupiah(item.p*item.q)+'</div>'+
-      '<button class="cr-remove" onclick="removeItem('+i+');navigate(\'#/keranjang\')" aria-label="Hapus">✕</button>'+
+  // State indeterminate hanya bisa dipasang setelah markup ada di DOM.
+  setTimeout(cartSyncIndeterminate, 0);
+
+  var terpilih = cartTerpilih();
+  var subtotal = terpilih.reduce(function(a,c){ return a+c.p*c.q; }, 0);
+
+  var grup = cartGrup().map(function(g){
+    var baris = g.idx.map(function(i){
+      var item = cart[i];
+      var p = prod(item.pid || pidByName(item.n));
+      var varian = (p ? p.weight : 200)+'gr'+(item.grind?' · '+esc(item.grind):'');
+      return '<div class="cart-row'+(item.sel===false?' off':'')+'">'+
+        '<input type="checkbox" class="cart-cb" '+(item.sel!==false?'checked':'')+
+          ' onclick="cartSetSel('+i+', this.checked)" aria-label="Pilih '+esc(item.n)+'">'+
+        '<img src="'+esc(item.img)+'" alt="'+esc(item.n)+'">'+
+        '<div class="cr-info"><b>'+esc(item.n)+'</b><span>'+varian+'</span>'+
+          '<span class="cr-unit">'+rupiah(item.p)+' / pcs</span></div>'+
+        '<div class="qty-stepper"><button onclick="changeQty('+i+',-1)"'+(item.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+item.q+'</span><button onclick="changeQty('+i+',1)"'+(item.q>=batasBaris(item)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div>'+
+        '<div class="cr-price">'+rupiah(item.p*item.q)+'</div>'+
+        '<div class="cr-aksi">'+
+          '<button type="button" class="cr-link" onclick="removeItem('+i+');navigate(\'#/keranjang\')">Hapus</button>'+
+          '<a class="cr-link" href="'+katalogURLq({kategori: g.cat})+'">Produk Serupa</a>'+
+        '</div>'+
+      '</div>';
+    }).join('');
+    var nAktif = g.idx.filter(function(i){ return cart[i].sel !== false; }).length;
+    var id = 'cbGrup-' + g.cat.replace(/\s+/g,'-');
+    return '<div class="cart-grup">'+
+      '<div class="cart-grup-head">'+
+        '<input type="checkbox" id="'+id+'" '+(nAktif===g.idx.length?'checked':'')+
+          ' onclick="cartSetSelGrup(\''+g.cat+'\', this.checked)" aria-label="Pilih semua di '+esc(g.label)+'">'+
+        '<b>'+esc(g.label)+'</b><span class="cart-grup-n">'+g.idx.length+' produk</span>'+
+      '</div>'+baris+
     '</div>';
   }).join('');
-  var subtotal = cart.reduce(function(a,c){ return a+c.p*c.q; },0);
+
+  var bisaCheckout = terpilih.length > 0;
   return '<div class="pg"><div class="container">'+
-    pgHead([{href:'#/',label:'Beranda'},{href:'#/keranjang',label:'Keranjang'}], 'Keranjang', 'Keranjang <em>Belanjamu</em>', cart.length+' produk siap checkout.')+
+    pgHead([{href:'#/',label:'Beranda'},{href:'#/keranjang',label:'Keranjang'}], 'Keranjang', 'Keranjang <em>Belanjamu</em>', cart.length+' produk di keranjang.')+
     '<div class="cart-grid">'+
-      '<div class="cart-list">'+rows+'</div>'+
+      '<div class="cart-list">'+
+        '<div class="cart-bar">'+
+          '<label class="cart-bar-all"><input type="checkbox" id="cbSemua" onclick="cartSetSelSemua(this.checked)"> Pilih Semua</label>'+
+          '<span class="cart-bar-n">'+terpilih.length+' dari '+cart.length+' produk dipilih</span>'+
+        '</div>'+
+        grup+
+      '</div>'+
       '<div class="cart-summary"><h3>Ringkasan</h3>'+
-        '<div class="sum-row"><span>Subtotal</span><b>'+rupiah(subtotal)+'</b></div>'+
+        '<div class="sum-row"><span>Subtotal ('+terpilih.length+' produk)</span><b>'+rupiah(subtotal)+'</b></div>'+
         (subtotal >= FREE_SHIP_THRESHOLD
           ? '<div class="sum-row disc"><span>Ongkir</span><b>GRATIS</b></div>'
           : '<div class="sum-row"><span>Gratis ongkir</span><b style="font-weight:500">kurang '+rupiah(FREE_SHIP_THRESHOLD-subtotal)+'</b></div>')+
         '<div class="sum-row sum-total"><span>Total</span><b>'+rupiah(subtotal)+'</b></div>'+
-        '<a class="btn btn-primary" style="width:100%" href="#/checkout">Lanjut ke Pengiriman →</a>'+
+        (bisaCheckout
+          ? '<a class="btn btn-primary" style="width:100%" href="#/checkout">Lanjut ke Pengiriman →</a>'
+          : '<button class="btn btn-primary" style="width:100%" disabled>Lanjut ke Pengiriman →</button>'+
+            '<p class="cart-kosong-note">Pilih minimal satu produk untuk checkout.</p>')+
         voucherPickerHTML()+
       '</div>'+
     '</div>'+
@@ -6777,6 +6886,43 @@ UJI_SUITE.push(function(){
   cart.length = 0;
   simpan.forEach(function(c){ cart.push(c); });
   __pdpQty = qSimpan; __pdpGrind = gSimpan;
+});
+UJI_SUITE.push(function(){
+  var simpan = cart.slice();
+  cart.length = 0;
+  cart.push({n:'X', p:1, img:'', q:1, pid:'p5', grind:null, sel:true});   // Espresso Blend
+  cart.push({n:'Y', p:1, img:'', q:1, pid:'p1', grind:null, sel:true});   // Specialty
+  cart.push({n:'Z', p:1, img:'', q:1, pid:'p6', grind:null, sel:false});  // Espresso Blend
+  cart.push({n:'?', p:1, img:'', q:1, pid:'entah', grind:null, sel:true});// tak dikenal
+
+  uji('T10 kategori per baris',
+      cart.map(cartKategori),
+      ['Espresso Blend','Specialty','Espresso Blend','Lainnya']);
+
+  var g = cartGrup();
+  uji('T10 urutan grup mengikuti CATS_ALL lalu Lainnya',
+      g.map(function(x){ return x.cat; }),
+      ['Specialty','Espresso Blend','Lainnya']);
+  uji('T10 indeks anggota grup',
+      g.filter(function(x){ return x.cat==='Espresso Blend'; })[0].idx, [0,2]);
+  uji('T10 baris tak dikenal tidak hilang',
+      g.reduce(function(a,x){ return a + x.idx.length; }, 0), cart.length);
+  uji('T10 label grup dari catLabel',
+      g[0].label, 'Specialty Coffee');
+
+  // Fungsi murni yang diuji — pembungkus cartSetSel* memanggil handleRouting()
+  // yang akan merender ulang halaman di tengah uji.
+  cartPilihGrup('Espresso Blend', true);
+  uji('T10 centang grup mengenai semua anggotanya',
+      [cart[0].sel, cart[2].sel], [true, true]);
+  uji('T10 centang grup tidak menyentuh grup lain', cart[1].sel, true);
+  cartPilihSemua(false);
+  uji('T10 lepas semua', cartTerpilih().length, 0);
+  cartPilihSatu(1, true);
+  uji('T10 centang satu baris', cartTerpilih().map(function(c){ return c.n; }), ['Y']);
+
+  cart.length = 0;
+  simpan.forEach(function(c){ cart.push(c); });
 });
 
 </script>
