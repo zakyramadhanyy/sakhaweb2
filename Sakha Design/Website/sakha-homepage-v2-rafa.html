@@ -3012,16 +3012,36 @@ function labelFacet(grup, id){
   return hasil;
 }
 
+// Gerbang untuk nilai yang datang dari URL. Chip dibangun dengan menyambung
+// string ke dalam atribut onclick, jadi nilai sembarang dari hash bisa keluar
+// dari atributnya dan menjalankan kode. Hanya id yang benar-benar terdaftar
+// sebagai facet yang boleh lewat. Sekaligus membuat tautan basi tidak lagi
+// memunculkan chip berlabel id mentah.
+function facetDikenal(grup, id){
+  if(grup === 'kategori') return id !== 'Semua' && CATS_ALL.indexOf(id) >= 0;
+  var src = grup === 'promo'   ? PROMO_FACETS   :
+            grup === 'sangrai' ? SANGRAI_FACETS :
+            grup === 'proses'  ? PROSES_FACETS  :
+            grup === 'rasa'    ? RASA_FAMILI    :
+            grup === 'harga'   ? HARGA_RANGE    : [];
+  var ada = false;
+  src.forEach(function(x){ if(x.id === id) ada = true; });
+  return ada;
+}
+
 // Dipakai chip filter aktif. `sort` dan `q` sengaja tidak masuk —
 // keduanya bukan penyempit hasil yang perlu dicabut satu per satu.
 function filterAktifList(q){
   var out = [];
   ['kategori','promo','sangrai','proses','rasa'].forEach(function(g){
     qList(q, g).forEach(function(id){
+      if(!facetDikenal(g, id)) return;
       out.push({ grup:g, id:id, label:labelFacet(g, id) });
     });
   });
-  if(q.harga) out.push({ grup:'harga', id:q.harga, label:labelFacet('harga', q.harga) });
+  if(q.harga && facetDikenal('harga', q.harga)){
+    out.push({ grup:'harga', id:q.harga, label:labelFacet('harga', q.harga) });
+  }
   return out;
 }
 
@@ -6561,6 +6581,20 @@ UJI_SUITE.push(function(){
   // sort dan q bukan filter — tidak ikut jadi chip.
   uji('T5 sort dan kata kunci bukan chip',
       filterAktifList({sort:'terbaru', q:'peach'}), []);
+});
+UJI_SUITE.push(function(){
+  uji('T5 id tak dikenal tidak jadi chip',
+      filterAktifList({sangrai:'99'}), []);
+  uji('T5 muatan keluar-atribut tidak jadi chip',
+      filterAktifList({kategori:'x" onmouseover="alert(1)'}), []);
+  uji('T5 muatan injeksi JS tidak jadi chip',
+      filterAktifList({rasa:"x');alert(1);('"}), []);
+  uji('T5 nilai sah tetap jadi chip',
+      filterAktifList({rasa:'buah'}).map(function(f){ return f.id; }), ['buah']);
+  uji('T5 nilai sah di tengah nilai sampah tetap lolos',
+      filterAktifList({sangrai:'99,2'}).map(function(f){ return f.id; }), ['2']);
+  uji('T5 kategori Semua tidak jadi chip',
+      filterAktifList({kategori:'Semua'}), []);
 });
 
 </script>
