@@ -2580,9 +2580,17 @@ function removeItem(i){
     showToast('Barang dihapus dari keranjang.');
   });
 }
-function addToCart(n,p,img){
+// Satu-satunya tempat yang menerjemahkan "isi keranjang" jadi "isi
+// checkout". Semua pembaca memakai helper ini — jangan memfilter `cart`
+// sendiri-sendiri, supaya aturannya tidak terpecah di banyak tempat.
+function cartTerpilih(){
+  return cart.filter(function(c){ return c.sel !== false; });
+}
+function addToCart(n,p,img,pid){
   const existing=cart.find(c=>c.n===n);
-  if(existing){existing.q++;}else{cart.push({n,p,img,q:1});}
+  // Menambah barang adalah niat membeli — baris yang tadinya tidak
+  // tercentang ikut tercentang lagi.
+  if(existing){existing.q++;existing.sel=true;}else{cart.push({n,p,img,q:1,pid:pid||pidByName(n)||null,sel:true});}
   renderCart();
   showToast('✓ '+n+' ditambahkan ke keranjang');
   cartDrawer.classList.add('open');
@@ -3457,8 +3465,8 @@ function pdpAddToCart(id){
     showToast('Kamu sudah punya '+sebelum+' di keranjang — itu seluruh stok yang tersisa.');
     return;
   }
-  if(sama) sama.q = sesudah;
-  else cart.push({ n:p.name, p:p.price, img:imgSrc(p.img), q:sesudah, pid:p.id, grind:grind });
+  if(sama){ sama.q = sesudah; sama.sel = true; }
+  else cart.push({ n:p.name, p:p.price, img:imgSrc(p.img), q:sesudah, pid:p.id, grind:grind, sel:true });
   renderCart();
   var masuk = sesudah - sebelum;
   showToast('✓ '+p.name+' ×'+masuk+(grind?' ('+grind+')':'')+' masuk keranjang'+
@@ -5230,7 +5238,7 @@ function snapshotState(){
     ver: SEED_VERSION,
     theme: APP_STATE.theme, lang: APP_STATE.lang,
     tickerClosed: APP_STATE.tickerClosed, demo: APP_STATE.demo, reguler: APP_STATE.reguler,
-    cart: cart.map(function(c){ return { n:c.n, p:c.p, q:c.q, pid:c.pid || pidByName(c.n), grind:c.grind||null }; }),
+    cart: cart.map(function(c){ return { n:c.n, p:c.p, q:c.q, pid:c.pid || pidByName(c.n), grind:c.grind||null, sel: c.sel !== false }; }),
     orders: ORDERS,
     wishlist: WISHLIST,
     alamat: ALAMAT,
@@ -5249,6 +5257,20 @@ function snapshotState(){
   };
 }
 
+// Menormalkan satu baris keranjang dari localStorage jadi bentuk yang
+// dipakai di memori. Dipisah dari applySnapshot() supaya bisa diuji tanpa
+// ikut menimpa tema, bahasa, dan state demo.
+function cartBarisDariSimpanan(c){
+  var p = c.pid ? prod(c.pid) : null;
+  return {
+    n: c.n, p: c.p, q: c.q,
+    pid: c.pid || null,
+    grind: c.grind || null,
+    img: p ? imgSrc(p.img) : '',
+    sel: c.sel !== false
+  };
+}
+
 function applySnapshot(s){
   if(!s) return;
   APP_STATE.theme = s.theme || 'light';
@@ -5259,8 +5281,7 @@ function applySnapshot(s){
   if(Array.isArray(s.cart)){
     cart.length = 0;
     s.cart.forEach(function(c){
-      var p = c.pid ? prod(c.pid) : null;
-      cart.push({ n:c.n, p:c.p, q:c.q, pid:c.pid||null, grind:c.grind||null, img: p ? imgSrc(p.img) : '' });
+      cart.push(cartBarisDariSimpanan(c));
     });
   }
   if(Array.isArray(s.orders) && s.orders.length) ORDERS = s.orders;
@@ -5770,8 +5791,8 @@ renderCart = function(){ __renderCartAsli(); saveState(); };
 addToCart = function(n, p, img, pid, grind){
   pid = pid || pidByName(n);
   var sama = cart.find(function(c){ return c.n === n && (c.grind||null) === (grind||null); });
-  if(sama){ sama.q++; }
-  else { cart.push({ n:n, p:p, img:img, q:1, pid:pid, grind:grind||null }); }
+  if(sama){ sama.q++; sama.sel = true; }
+  else { cart.push({ n:n, p:p, img:img, q:1, pid:pid, grind:grind||null, sel:true }); }
   renderCart();
   showToast('✓ ' + n + ' ditambahkan ke keranjang');
   document.getElementById('cartDrawer').classList.add('open');
@@ -6632,6 +6653,32 @@ UJI_SUITE.push(function(){
     });
   });
   uji('T6 tidak ada tautan kategori tanpa produk', mati, []);
+});
+UJI_SUITE.push(function(){
+  var simpan = cart.slice();
+  cart.length = 0;
+  cart.push({n:'A', p:1000, img:'', q:1, pid:'p1', grind:null, sel:true});
+  cart.push({n:'B', p:2000, img:'', q:2, pid:'p5', grind:null, sel:false});
+  cart.push({n:'C', p:3000, img:'', q:1, pid:'p9', grind:null});   // sel belum ada
+  uji('T7 cartTerpilih hanya yang sel bukan false',
+      cartTerpilih().map(function(c){ return c.n; }), ['A','C']);
+  uji('T7 baris tanpa sel dianggap terpilih',
+      cartTerpilih().length, 2);
+  // Bolak-balik penyimpanan: sel harus ikut tersimpan…
+  uji('T7 snapshot menyimpan sel',
+      snapshotState().cart.map(function(c){ return c.sel; }), [true, false, true]);
+  // …dan ikut terbaca lagi. Diuji lewat helper murni, BUKAN applySnapshot():
+  // applySnapshot juga menimpa tema, bahasa, dan state demo, jadi memanggilnya
+  // di dalam uji akan mengubah tampilan yang sedang dilihat pengguna.
+  uji('T7 sel terbaca kembali',
+      cartBarisDariSimpanan({n:'A', p:1, q:1, pid:'p1', sel:false}).sel, false);
+  // Keranjang versi lama (tanpa field sel sama sekali) harus terbaca penuh.
+  uji('T7 keranjang lama terbaca dengan semua baris terpilih',
+      cartBarisDariSimpanan({n:'A', p:1, q:1, pid:'p1'}).sel, true);
+  uji('T7 baris lama tetap dapat gambarnya',
+      cartBarisDariSimpanan({n:'A', p:1, q:1, pid:'p1'}).img, imgSrc(prod('p1').img));
+  cart.length = 0;
+  simpan.forEach(function(c){ cart.push(c); });
 });
 
 </script>
