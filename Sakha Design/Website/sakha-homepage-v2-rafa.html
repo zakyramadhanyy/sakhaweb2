@@ -795,6 +795,8 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 .stock-note{display:block;font-size:11px;font-weight:700;margin-bottom:8px;}
 .stock-note.low{color:var(--warning);}
 .stock-note.out{color:var(--error);}
+.pcard-meta{font-size:11.5px;color:var(--muted);margin-top:3px;}
+.pcard-loc{font-size:11.5px;color:var(--muted);margin-top:3px;}
 
 .simple-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:0 1px 3px rgba(17,25,33,.04);}
 
@@ -2022,7 +2024,6 @@ body.locked{overflow:hidden;}
           <li><a href="#/katalog?kategori=Espresso%20Blend">Espresso Blend</a></li>
           <li><a href="#/katalog?kategori=Commodity%20Blend">Commodity Blend</a></li>
           <li><a href="#/katalog?kategori=Coffee%20Drip">Coffee Drip</a></li>
-          <li><a href="#/katalog?kategori=Alat%20Seduh">Alat Seduh</a></li>
         </ul></div>
       </div>
       <div class="footer-col">
@@ -2806,6 +2807,10 @@ function stockNote(p){
   return '';
 }
 
+// Semua produk dikirim dari roastery yang sama — lokasi adalah konstanta
+// brand, bukan field per-produk.
+var ROASTERY_LOKASI = 'Jakarta Selatan';
+
 function pcardHTML(p){
   var badge = p.badge==='sale' ? '<span class="badge badge-left badge-sale">DISKON</span>'
     : p.badge==='new' ? '<span class="badge badge-left badge-new">BARU</span>' : '';
@@ -2819,7 +2824,10 @@ function pcardHTML(p){
       '<div class="body">'+
         '<div class="cat-tag">'+esc(p.catLabel)+'</div>'+
         '<a class="pcard-link" href="#/produk/'+p.id+'"><div class="name">'+esc(p.name)+'</div></a>'+
+        '<div class="pcard-meta"><span aria-hidden="true">★</span> '+p.rating+
+          '<span class="visually-hidden"> dari 5</span> · '+p.sold+' terjual</div>'+
         '<div class="price-row"><span class="price">'+rupiah(p.price)+'</span>'+oldPriceHTML+'</div>'+
+        '<div class="pcard-loc"><span aria-hidden="true">📍</span> '+esc(ROASTERY_LOKASI)+'</div>'+
         stockNote(p)+
         '<button class="atc" '+disabled+' onclick="addToCart('+"'"+esc(p.name).replace(/'/g,"\\'")+"'"+','+p.price+','+"'"+esc(img)+"'"+",'"+p.id+"'"+')">'+(p.stock<=0?'Stok Habis':'+ Keranjang')+'</button>'+
       '</div>'+
@@ -6595,6 +6603,18 @@ UJI_SUITE.push(function(){
       filterAktifList({sangrai:'99,2'}).map(function(f){ return f.id; }), ['2']);
   uji('T5 kategori Semua tidak jadi chip',
       filterAktifList({kategori:'Semua'}), []);
+});
+UJI_SUITE.push(function(){
+  var kategoriNyata = {};
+  PRODUCTS.forEach(function(p){ kategoriNyata[p.cat] = true; });
+  var mati = [];
+  document.querySelectorAll('a[href^="#/katalog?kategori="]').forEach(function(a){
+    var q = parseHashQuery(a.getAttribute('href'));
+    qList(q, 'kategori').forEach(function(c){
+      if(!kategoriNyata[c] && mati.indexOf(c) < 0) mati.push(c);
+    });
+  });
+  uji('T6 tidak ada tautan kategori tanpa produk', mati, []);
 });
 
 </script>
