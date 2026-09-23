@@ -6605,13 +6605,24 @@ UJI_SUITE.push(function(){
       filterAktifList({kategori:'Semua'}), []);
 });
 UJI_SUITE.push(function(){
+  // Sumber halaman dibaca dari DOM kalau tersedia (browser), atau dari harness
+  // kalau berjalan headless. Memeriksa markup mentah, bukan DOM, supaya uji ini
+  // benar-benar bisa GAGAL di kedua lingkungan — versi sebelumnya memakai
+  // document.querySelectorAll yang selalu kosong di harness, jadi selalu lulus.
+  var sumber = (typeof document !== 'undefined' && document.documentElement &&
+                document.documentElement.outerHTML) ||
+               (typeof __HTML_SUMBER__ !== 'undefined' ? __HTML_SUMBER__ : '');
   var kategoriNyata = {};
   PRODUCTS.forEach(function(p){ kategoriNyata[p.cat] = true; });
+  var awalan = 'href="#/katalog?kategori=';
   var mati = [];
-  document.querySelectorAll('a[href^="#/katalog?kategori="]').forEach(function(a){
-    var q = parseHashQuery(a.getAttribute('href'));
-    qList(q, 'kategori').forEach(function(c){
-      if(!kategoriNyata[c] && mati.indexOf(c) < 0) mati.push(c);
+  (sumber.match(/href="#\/katalog\?kategori=([^"]*)"/g) || []).forEach(function(h){
+    var nilai = h.slice(awalan.length, -1);
+    // Lewati href yang dirakit di dalam JS (mengandung kutip atau penyambung) —
+    // itu bukan tautan literal di markup.
+    if(nilai.indexOf("'") >= 0 || nilai.indexOf('+') >= 0) return;
+    decodeURIComponent(nilai).split(',').forEach(function(c){
+      if(c && !kategoriNyata[c] && mati.indexOf(c) < 0) mati.push(c);
     });
   });
   uji('T6 tidak ada tautan kategori tanpa produk', mati, []);
