@@ -2601,6 +2601,10 @@ function removeItem(i){
   konfirmasi('Hapus dari keranjang?', `${item.n} akan dikeluarkan dari keranjangmu.`, 'Hapus', ()=>{
     cart.splice(i,1);
     renderCart();
+    // Halaman yang sedang tampil ikut dibangun ulang. Tanpa ini, baris di
+    // bawah baris yang dihapus tetap membawa indeks lama yang sudah bergeser,
+    // dan klik berikutnya akan mengenai produk yang salah.
+    handleRouting();
     showToast('Barang dihapus dari keranjang.');
   });
 }
@@ -3650,10 +3654,10 @@ function viewKeranjang(){
         '<img src="'+esc(item.img)+'" alt="'+esc(item.n)+'">'+
         '<div class="cr-info"><b>'+esc(item.n)+'</b><span>'+varian+'</span>'+
           '<span class="cr-unit">'+rupiah(item.p)+' / pcs</span></div>'+
-        '<div class="qty-stepper"><button onclick="changeQty('+i+',-1)"'+(item.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+item.q+'</span><button onclick="changeQty('+i+',1)"'+(item.q>=batasBaris(item)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div>'+
+        '<div class="qty-stepper"><button onclick="changeQty('+i+',-1);navigate(\'#/keranjang\')"'+(item.q<=1?' disabled aria-label="Jumlah minimum 1"':' aria-label="Kurangi jumlah"')+'>−</button><span>'+item.q+'</span><button onclick="changeQty('+i+',1);navigate(\'#/keranjang\')"'+(item.q>=batasBaris(item)?' disabled aria-label="Sudah mencapai batas stok"':' aria-label="Tambah jumlah"')+'>+</button></div>'+
         '<div class="cr-price">'+rupiah(item.p*item.q)+'</div>'+
         '<div class="cr-aksi">'+
-          '<button type="button" class="cr-link" onclick="removeItem('+i+');navigate(\'#/keranjang\')">Hapus</button>'+
+          '<button type="button" class="cr-link" onclick="removeItem('+i+')">Hapus</button>'+
           '<a class="cr-link" href="'+katalogURLq({kategori: g.cat})+'">Produk Serupa</a>'+
         '</div>'+
       '</div>';
@@ -6923,6 +6927,19 @@ UJI_SUITE.push(function(){
 
   cart.length = 0;
   simpan.forEach(function(c){ cart.push(c); });
+});
+UJI_SUITE.push(function(){
+  var simpan = cart.slice();
+  cart.length = 0;
+  cart.push({n:'A', p:1000, img:'', q:2, pid:'p1', grind:null, sel:true});
+  var h = viewKeranjang();
+  // Halaman keranjang harus membangun ulang dirinya setelah kuantitas berubah —
+  // renderCart() saja hanya menyentuh drawer, bukan halaman ini.
+  uji('T10 stepper keranjang ikut merender ulang halaman',
+      /changeQty\(0,-1\);navigate\('#\/keranjang'\)/.test(h), true);
+  uji('T10 tombol hapus tidak menavigasi sebelum konfirmasi',
+      /removeItem\(0\);navigate/.test(h), false);
+  cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
 });
 
 </script>
