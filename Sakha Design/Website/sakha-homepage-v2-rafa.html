@@ -3772,12 +3772,22 @@ function checkoutTotals(){
 }
 function pakaiVoucher(code){
   var v = voucherByCode(code);
-  var subtotal = subtotalTerpilih();
   if(!v){ showToast('Kode voucher tidak dikenali.'); return; }
+  // Melepas voucher yang sedang terpasang harus SELALU bisa, termasuk saat
+  // belanja sudah turun di bawah syarat minimum. Kalau syarat minimum diperiksa
+  // lebih dulu, voucher yang tidak lagi memenuhi syarat jadi terkunci: tombolnya
+  // menolak dengan alasan minimum, padahal yang diminta pengguna justru mencabutnya.
+  if(checkoutVoucher === v.code){
+    checkoutVoucher = null;
+    showToast('Voucher dilepas.');
+    handleRouting();
+    return;
+  }
+  var subtotal = subtotalTerpilih();
   if(v.terpakai){ showToast('Voucher '+v.code+' sudah pernah dipakai.'); return; }
   if(subtotal < v.minSpend){ showToast('Minimal belanja '+rupiah(v.minSpend)+' untuk voucher ini.'); return; }
-  checkoutVoucher = (checkoutVoucher === v.code) ? null : v.code;
-  showToast(checkoutVoucher ? '✓ Voucher '+v.code+' dipakai.' : 'Voucher dilepas.');
+  checkoutVoucher = v.code;
+  showToast('✓ Voucher '+v.code+' dipakai.');
   handleRouting();   // tetap di halaman yang sedang dibuka (keranjang / checkout)
 }
 function pakaiVoucherInput(){
@@ -3788,7 +3798,7 @@ function voucherPickerHTML(){
   var subtotal = subtotalTerpilih();
   var tersedia = VOUCHERS.filter(function(v){ return !v.terpakai; });
   var chips = tersedia.length ? tersedia.map(function(v){
-    var bisa = subtotal >= v.minSpend;
+    var bisa = (subtotal >= v.minSpend) || (checkoutVoucher === v.code);
     return '<button type="button" class="vcr-chip" aria-pressed="'+(checkoutVoucher===v.code)+'" '+
       (bisa?'':'disabled title="Min. belanja '+rupiah(v.minSpend)+'"')+
       ' onclick="pakaiVoucher(\''+v.code+'\')">'+esc(v.code)+'</button>';
@@ -7374,6 +7384,37 @@ UJI_SUITE.push(function(){
 
   cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
   checkoutStep = sA; checkoutVoucher = vA; checkoutKurir = kA;
+});
+UJI_SUITE.push(function(){
+  // FIX terakhir: melepas voucher yang sedang terpasang harus SELALU bisa,
+  // termasuk saat belanja terpilih sudah turun di bawah syarat minimumnya —
+  // kalau tidak, voucher itu terkunci: terlihat, bernilai nol, dan tidak bisa
+  // dicabut dari halaman mana pun.
+  var simpan = cart.slice(), vA = checkoutVoucher;
+  try {
+    var v = null;
+    VOUCHERS.forEach(function(x){ if(!v && !x.terpakai) v = x; });
+    if(v){
+      cart.length = 0;
+      cart.push({n:'Besar', p:Math.max(v.minSpend + 50000, 100000), img:'', q:1, pid:'p2', grind:null, sel:true});
+      checkoutVoucher = null;
+      pakaiVoucher(v.code);
+      uji('FINAL voucher terpasang saat memenuhi syarat', checkoutVoucher, v.code);
+
+      // Turunkan belanja di bawah syarat minimum tanpa melepas vouchernya.
+      cart[0].sel = false;
+      uji('FINAL diskon jatuh ke nol di bawah minimum', checkoutTotals().diskon, 0);
+      uji('FINAL chip voucher tetap bisa diklik saat terpasang',
+          /aria-pressed="true"[^>]*disabled/.test(voucherPickerHTML()), false);
+
+      // Dan pengguna harus tetap bisa mencabutnya.
+      pakaiVoucher(v.code);
+      uji('FINAL voucher bisa dilepas walau di bawah minimum', checkoutVoucher, null);
+    }
+  } finally {
+    cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
+    checkoutVoucher = vA;
+  }
 });
 
 </script>
