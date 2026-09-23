@@ -2847,6 +2847,9 @@ function sortList(list, sort){
   else if(sort === 'nama')   l.sort(function(a,b){ return a.name.localeCompare(b.name,'id'); });
   else if(sort === 'terlaris') l.sort(function(a,b){ return (b.sold||0) - (a.sold||0); });
   else if(sort === 'rating') l.sort(function(a,b){ return (b.rating||0) - (a.rating||0); });
+  else if(sort === 'terbaru') l.sort(function(a,b){
+    return String(b.added||'').localeCompare(String(a.added||''));
+  });
   return l;
 }
 function katalogURL(cat, sort, harga, kw){
@@ -2993,6 +2996,80 @@ function rasaFamili(p){
     }
   });
   return out;
+}
+
+// `abaikan` berisi nama grup yang dilewati — dipakai facetCount supaya
+// hitungan sebuah grup tidak dipersempit oleh pilihan di grup itu sendiri.
+// Antar-grup digabung dengan DAN, antar-nilai dalam satu grup dengan ATAU.
+function katalogCocok(p, q, abaikan){
+  function nilai(g){ return abaikan === g ? [] : qList(q, g); }
+
+  var kat = nilai('kategori');
+  if(kat.length && kat.indexOf(p.cat) < 0) return false;
+
+  var promo = nilai('promo');
+  if(promo.length){
+    var adaPromo = false;
+    promo.forEach(function(id){
+      PROMO_FACETS.forEach(function(f){ if(f.id === id && f.uji(p)) adaPromo = true; });
+    });
+    if(!adaPromo) return false;
+  }
+
+  var sangrai = nilai('sangrai');
+  if(sangrai.length && sangrai.indexOf(String(p.roastLevel)) < 0) return false;
+
+  var proses = nilai('proses');
+  if(proses.length && proses.indexOf(prosesFacet(p)) < 0) return false;
+
+  var rasa = nilai('rasa');
+  if(rasa.length){
+    var fam = rasaFamili(p), adaRasa = false;
+    rasa.forEach(function(id){ if(fam.indexOf(id) >= 0) adaRasa = true; });
+    if(!adaRasa) return false;
+  }
+
+  if(abaikan !== 'harga' && q.harga){
+    var hr = null;
+    HARGA_RANGE.forEach(function(h){ if(h.id === q.harga) hr = h; });
+    if(hr && !hr.uji(p.price)) return false;
+  }
+
+  var kw = (q.q || '').toLowerCase();
+  if(kw && p.name.toLowerCase().indexOf(kw) < 0 &&
+     p.notes.join(' ').toLowerCase().indexOf(kw) < 0) return false;
+
+  return true;
+}
+
+// demoProducts() dipakai (bukan PRODUCTS langsung) supaya state demo
+// 'kosong'/'memuat'/'galat' yang sudah ada tetap berfungsi.
+function katalogFilter(q, abaikan){
+  return demoProducts().filter(function(p){ return katalogCocok(p, q, abaikan); });
+}
+
+function facetCocok(p, grup, id){
+  if(grup === 'kategori') return p.cat === id;
+  if(grup === 'sangrai')  return String(p.roastLevel) === id;
+  if(grup === 'proses')   return prosesFacet(p) === id;
+  if(grup === 'rasa')     return rasaFamili(p).indexOf(id) >= 0;
+  if(grup === 'promo'){
+    var ok = false;
+    PROMO_FACETS.forEach(function(f){ if(f.id === id && f.uji(p)) ok = true; });
+    return ok;
+  }
+  if(grup === 'harga'){
+    var hit = false;
+    HARGA_RANGE.forEach(function(h){ if(h.id === id && h.uji(p.price)) hit = true; });
+    return hit;
+  }
+  return false;
+}
+
+function facetCount(q, grup, id){
+  return katalogFilter(q, grup).filter(function(p){
+    return facetCocok(p, grup, id);
+  }).length;
 }
 // ── §V2 PENCARIAN (#/cari) ──────────────────────────────────────
 function viewCari(q){
@@ -6273,6 +6350,41 @@ UJI_SUITE.push(function(){
   uji('T2 tidak ada catatan rasa yang tercecer', tercecer, []);
   uji('T2 Manis Asam masuk buah, bukan manis',
       rasaFamili({notes:['Manis Asam']}), ['buah']);
+});
+UJI_SUITE.push(function(){
+  function ids(q){ return katalogFilter(q).map(function(p){ return p.id; }); }
+
+  // Seluruh angka di bawah mengandaikan state demo 'normal'. Kalau uji ini
+  // gagal, ganti dulu state demo ke normal sebelum membaca sisanya.
+  uji('T3 state demo normal', demoProducts().length, 12);
+  uji('T3 tanpa filter mengembalikan semua', ids({}).length, 12);
+  uji('T3 satu kategori', ids({kategori:'Espresso Blend'}), ['p5','p6']);
+  uji('T3 dua kategori = ATAU', ids({kategori:'Espresso Blend,Coffee Drip'}).length, 4);
+  uji('T3 dua grup = DAN', ids({kategori:'Specialty', sangrai:'2'}).length, 6);
+  uji('T3 grup berbeda menyempitkan', ids({kategori:'Specialty', sangrai:'4'}), []);
+  uji('T3 proses washed tidak menarik semi-washed',
+      ids({proses:'washed'}), ['p1','p5','p12']);
+  uji('T3 promo diskon', ids({promo:'diskon'}), ['p1','p3','p6','p7']);
+  uji('T3 harga tetap tunggal', ids({harga:'premium'}).length,
+      PRODUCTS.filter(function(p){ return p.price > 100000; }).length);
+  uji('T3 kata kunci', ids({q:'peach'}), ['p4']);
+
+  uji('T3 facetCount kategori Specialty', facetCount({}, 'kategori', 'Specialty'), 6);
+  uji('T3 facetCount proses natural', facetCount({}, 'proses', 'natural'), 5);
+  uji('T3 facetCount rasa buah', facetCount({}, 'rasa', 'buah'), 8);
+  // Grup yang sedang dihitung diabaikan dari filternya sendiri: memilih
+  // Specialty tidak boleh membuat kategori lain jadi nol dan mustahil diklik.
+  uji('T3 facetCount mengabaikan grupnya sendiri',
+      facetCount({kategori:'Specialty'}, 'kategori', 'Espresso Blend'), 2);
+  // Tapi grup LAIN tetap membatasi.
+  uji('T3 facetCount tetap dibatasi grup lain',
+      facetCount({sangrai:'4'}, 'kategori', 'Specialty'), 0);
+
+  uji('T3 sort terbaru',
+      sortList(PRODUCTS, 'terbaru').map(function(p){ return p.id; })[0], 'p11');
+  uji('T3 sort terlaris masih jalan',
+      sortList(PRODUCTS, 'terlaris')[0].sold,
+      Math.max.apply(null, PRODUCTS.map(function(p){ return p.sold; })));
 });
 
 </script>
