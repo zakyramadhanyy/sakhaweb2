@@ -827,6 +827,9 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 .qty-stepper button{width:36px;height:44px;background:var(--surface);border:none;font-size:16px;font-weight:700;color:var(--ink);cursor:pointer;}
 .qty-stepper button:hover{background:var(--cream);}
 .qty-stepper span{min-width:28px;text-align:center;font-weight:700;font-size:14px;}
+.pdp-stok{font-size:12.5px;color:var(--muted);}
+.pdp-cta-row{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;}
+.pdp-cta-row .btn{flex:1;min-width:170px;}
 .pdp-facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:24px 0;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
 .pdp-facts span{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
 .pdp-facts b{font-size:13px;color:var(--ink);}
@@ -3446,8 +3449,13 @@ function viewProduk(id){
           '<div class="chip-row">'+notesHTML+'</div>'+
           grindsHTML+
           '<div class="pdp-buy-row">'+
-            '<div class="qty-stepper"><button id="pdpQtyMinus" onclick="pdpQty(-1)" aria-label="Kurangi jumlah" disabled>−</button><span id="pdpQty">1</span><button id="pdpQtyPlus" onclick="pdpQty(1)" aria-label="Tambah jumlah">+</button></div><span class="field-hint" id="pdpQtyNote" role="status" aria-live="polite"></span>'+
-            '<button class="btn btn-primary btn-lg" '+(p.stock<=0?'disabled':'')+' onclick="pdpAddToCart(\''+p.id+'\')" style="flex:1">'+(p.stock<=0?'Stok Habis':'Tambah ke Keranjang')+'</button>'+
+            '<div class="qty-stepper"><button id="pdpQtyMinus" onclick="pdpQty(-1)" aria-label="Kurangi jumlah" disabled>−</button><span id="pdpQty">1</span><button id="pdpQtyPlus" onclick="pdpQty(1)" aria-label="Tambah jumlah">+</button></div>'+
+            '<span class="pdp-stok">'+(p.stock>0 ? 'Stok '+p.stock+' tersedia' : 'Stok habis')+'</span>'+
+            '<span class="field-hint" id="pdpQtyNote" role="status" aria-live="polite"></span>'+
+          '</div>'+
+          '<div class="pdp-cta-row">'+
+            '<button class="btn btn-secondary btn-lg" '+(p.stock<=0?'disabled':'')+' onclick="pdpAddToCart(\''+p.id+'\')">'+(p.stock<=0?'Stok Habis':'Masukkan Keranjang')+'</button>'+
+            '<button class="btn btn-primary btn-lg" '+(p.stock<=0?'disabled':'')+' onclick="pdpBeliSekarang(\''+p.id+'\')">Beli Sekarang</button>'+
           '</div>'+
           '<div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">'+
             '<button class="pdp-wish" type="button" data-wish="'+p.id+'" aria-pressed="'+wishlistPunya(p.id)+'" onclick="wishlistToggle(\''+p.id+'\')">'+(wishlistPunya(p.id)?'♥ Tersimpan di Favorit':'♡ Simpan ke Favorit')+'</button>'+
@@ -3485,29 +3493,63 @@ function pdpQty(d){
     ? (p && p.stock<=MAX_QTY ? 'Batas stok tersisa ('+p.stock+' pcs).' : 'Maksimal '+MAX_QTY+' pcs per produk.')
     : '';
 }
-function pdpAddToCart(id){
-  var p = prod(id); if(!p) return;
+// Melakukan penambahan ke keranjang dan mengembalikan { i, pesan }, dengan
+// `i` = indeks baris yang tersentuh. Mengembalikan null kalau tidak ada yang
+// bertambah (stok sudah habis terpakai) — pemanggil wajib berhenti di situ.
+function pdpTambah(id){
+  var p = prod(id); if(!p) return null;
   var grind = __pdpGrind || (p.grinds ? p.grinds[2] : null);
-  // Satu kali dorong sejumlah qty (bukan loop addToCart) supaya toast &
-  // drawer tidak berkedip berkali-kali, dan gilingan ikut tersimpan.
+  // Satu kali dorong sejumlah qty (bukan loop addToCart) supaya toast tidak
+  // berkedip berkali-kali, dan gilingan ikut tersimpan.
   var maks = batasQty(p);
   var sama = cart.find(function(c){ return c.n === p.name && (c.grind||null) === (grind||null); });
   var sebelum = sama ? sama.q : 0;
   var sesudah = Math.min(maks, sebelum + __pdpQty);
   if(sesudah === sebelum){
+    // Jumlahnya tidak bisa bertambah, tapi klik ini tetap berarti "saya mau beli
+    // ini" — jadi barisnya dicentang kembali. Tanpa ini, baris yang tadinya
+    // dilepas centangnya akan diam-diam tidak ikut checkout meski pengguna
+    // baru saja menekan tambah.
+    if(sama) sama.sel = true;
     // H9 — jelaskan kenapa tidak bertambah, bukan diam-diam mengabaikan klik.
     showToast('Kamu sudah punya '+sebelum+' di keranjang — itu seluruh stok yang tersisa.');
-    return;
+    return null;
   }
   if(sama){ sama.q = sesudah; sama.sel = true; }
   else cart.push({ n:p.name, p:p.price, img:imgSrc(p.img), q:sesudah, pid:p.id, grind:grind, sel:true });
-  renderCart();
+  var baris = sama || cart[cart.length - 1];
   var masuk = sesudah - sebelum;
-  pulseCartBadge();
-  showToastAksi('✓ '+p.name+' ×'+masuk+(grind?' ('+grind+')':'')+' masuk keranjang'+
-    (masuk < __pdpQty ? ' (dibatasi sisa stok)' : ''), 'Lihat Keranjang', '#/keranjang');
+  return {
+    i: cart.indexOf(baris),
+    pesan: '✓ '+p.name+' ×'+masuk+(grind?' ('+grind+')':'')+' masuk keranjang'+
+           (masuk < __pdpQty ? ' (dibatasi sisa stok)' : '')
+  };
+}
+
+function pdpResetQty(){
   __pdpQty = 1;
   var el = document.getElementById('pdpQty'); if(el) el.textContent = '1';
+}
+
+function pdpAddToCart(id){
+  var r = pdpTambah(id);
+  if(!r) return;
+  renderCart(); // renderCart sudah memanggil saveState() lewat wrapper
+  pulseCartBadge();
+  showToastAksi(r.pesan, 'Lihat Keranjang', '#/keranjang');
+  pdpResetQty();
+}
+
+// "Beli Sekarang": barang tetap masuk keranjang (satu sumber kebenaran),
+// lalu SEMUA baris lain dilepas centangnya supaya checkout hanya berisi
+// item ini. Kalau pengguna mundur dari checkout, barangnya masih ada.
+function pdpBeliSekarang(id){
+  var r = pdpTambah(id);
+  if(!r) return;
+  cart.forEach(function(c, k){ c.sel = (k === r.i); });
+  renderCart(); // renderCart sudah memanggil saveState() lewat wrapper
+  pdpResetQty();
+  navigate('#/checkout');
 }
 
 // ── §V4 KERANJANG PENUH (#/keranjang) ───────────────────────────
@@ -6711,6 +6753,30 @@ UJI_SUITE.push(function(){
       cartBarisDariSimpanan({n:'A', p:1, q:1, pid:'p1'}).img, imgSrc(prod('p1').img));
   cart.length = 0;
   simpan.forEach(function(c){ cart.push(c); });
+});
+UJI_SUITE.push(function(){
+  var simpan = cart.slice(), qSimpan = __pdpQty, gSimpan = __pdpGrind;
+  cart.length = 0;
+  cart.push({n:'Lama A', p:1000, img:'', q:1, pid:'p1', grind:null, sel:true});
+  cart.push({n:'Lama B', p:2000, img:'', q:1, pid:'p5', grind:null, sel:true});
+  __pdpQty = 1; __pdpGrind = null;
+  // p3 dipakai karena stoknya jauh di atas 2, jadi penambahan kedua pasti
+  // tidak tertahan batas stok.
+  var r = pdpTambah('p3');
+  uji('T9 pdpTambah mengembalikan indeks baris', typeof (r && r.i), 'number');
+  uji('T9 baris baru adalah produk yang diminta', cart[r.i].pid, 'p3');
+  cart.forEach(function(c, k){ c.sel = (k === r.i); });
+  uji('T9 hanya item itu yang terpilih',
+      cartTerpilih().map(function(c){ return c.pid; }), ['p3']);
+  uji('T9 barang lain tetap ada di keranjang', cart.length, 3);
+  // Menambah lagi produk yang sama harus menyatu ke baris yang sama.
+  var r2 = pdpTambah('p3');
+  uji('T9 penambahan kedua menyatu ke baris yang sama', r2 && r2.i, r.i);
+  uji('T9 keranjang tidak bertambah baris', cart.length, 3);
+  uji('T9 kuantitas baris menumpuk', cart[r.i].q, 2);
+  cart.length = 0;
+  simpan.forEach(function(c){ cart.push(c); });
+  __pdpQty = qSimpan; __pdpGrind = gSimpan;
 });
 
 </script>
