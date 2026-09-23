@@ -1218,6 +1218,11 @@ html[data-theme="dark"] .gal-slider img{filter:brightness(.92);}
   .katalog-filter-toggle{display:inline-flex;}
 }
 
+.sort-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 14px;}
+.chips-aktif-row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;align-items:center;}
+.chip-aktif{cursor:pointer;border:1.5px solid var(--burnt-sienna);color:var(--burnt-sienna);}
+.chip-clear{cursor:pointer;border:0;background:none;color:var(--muted);text-decoration:underline;font-size:12px;}
+
 /* ── PDP: galeri thumbnail, wishlist, ingatkan stok, daftar ulasan ── */
 .pdp-thumbs{display:flex;gap:9px;margin-top:11px;flex-wrap:wrap;}
 .pdp-thumbs button{width:62px;height:62px;border-radius:var(--radius-md);overflow:hidden;border:1.5px solid var(--border);background:var(--surface);padding:0;}
@@ -2965,6 +2970,76 @@ function katalogSidebarHTML(q){
   '</aside>';
 }
 
+// Tab sort menggantikan <select>. 'Harga' bukan tab ketiga melainkan satu
+// tombol dua-state (naik/turun), sesuai pola marketplace.
+var SORT_TABS = [
+  {id:'relevan',  label:'Terkait'},
+  {id:'terbaru',  label:'Terbaru'},
+  {id:'terlaris', label:'Terlaris'}
+];
+function katalogSetSort(id){
+  var q = parseHashQuery(location.hash);
+  q.sort = id;
+  navigate(katalogURLq(q));
+}
+function katalogToggleHargaSort(){
+  var q = parseHashQuery(location.hash);
+  q.sort = (q.sort === 'harga-naik') ? 'harga-turun' : 'harga-naik';
+  navigate(katalogURLq(q));
+}
+function katalogSortHTML(q){
+  var sort = q.sort || 'relevan';
+  var tabs = SORT_TABS.map(function(t){
+    var on = (t.id === sort);
+    return '<button type="button" class="filter-tab'+(on?' active':'')+'" aria-pressed="'+on+'" onclick="katalogSetSort(\''+t.id+'\')">'+esc(t.label)+'</button>';
+  }).join('');
+  var hargaOn = (sort === 'harga-naik' || sort === 'harga-turun');
+  var caret = (sort === 'harga-turun') ? '▼' : '▲';
+  tabs += '<button type="button" class="filter-tab'+(hargaOn?' active':'')+'" aria-pressed="'+hargaOn+'" onclick="katalogToggleHargaSort()">Harga <span aria-hidden="true">'+caret+'</span>'+
+          '<span class="visually-hidden">'+(sort === 'harga-turun' ? 'tertinggi dulu' : 'terendah dulu')+'</span></button>';
+  return '<div class="sort-tabs" role="group" aria-label="Urutkan produk">'+tabs+'</div>';
+}
+
+function labelFacet(grup, id){
+  if(grup === 'kategori') return id;
+  var src = grup === 'promo'   ? PROMO_FACETS   :
+            grup === 'sangrai' ? SANGRAI_FACETS :
+            grup === 'proses'  ? PROSES_FACETS  :
+            grup === 'rasa'    ? RASA_FAMILI    :
+            grup === 'harga'   ? HARGA_RANGE    : [];
+  var hasil = id;
+  src.forEach(function(x){ if(x.id === id) hasil = x.label; });
+  return hasil;
+}
+
+// Dipakai chip filter aktif. `sort` dan `q` sengaja tidak masuk —
+// keduanya bukan penyempit hasil yang perlu dicabut satu per satu.
+function filterAktifList(q){
+  var out = [];
+  ['kategori','promo','sangrai','proses','rasa'].forEach(function(g){
+    qList(q, g).forEach(function(id){
+      out.push({ grup:g, id:id, label:labelFacet(g, id) });
+    });
+  });
+  if(q.harga) out.push({ grup:'harga', id:q.harga, label:labelFacet('harga', q.harga) });
+  return out;
+}
+
+function katalogChipsHTML(q){
+  var list = filterAktifList(q);
+  if(!list.length) return '';
+  var chips = list.map(function(f){
+    var fn = (f.grup === 'harga')
+      ? "katalogSetTunggal('harga','" + f.id + "')"
+      : "katalogToggle('" + f.grup + "','" + f.id + "')";
+    return '<button type="button" class="chip chip-aktif" onclick="'+fn+'">'+
+      esc(f.label)+' <span aria-hidden="true">✕</span>'+
+      '<span class="visually-hidden">Hapus filter '+esc(f.label)+'</span></button>';
+  }).join('');
+  return '<div class="chips-aktif-row">'+chips+
+    '<button type="button" class="chip chip-clear" onclick="katalogReset()">Hapus semua</button></div>';
+}
+
 function viewKatalog(q){
   q = q || {};
   var list = sortList(katalogFilter(q), q.sort);
@@ -2985,6 +3060,8 @@ function viewKatalog(q){
             '<span class="count grow">'+list.length+' produk ditemukan</span>'+
             '<button type="button" class="filter-toggle katalog-filter-toggle" aria-expanded="'+__katalogFilterBuka+'" aria-controls="katalogSidebar" onclick="toggleKatalogSidebar(this)">⚙ Filter</button>'+
           '</div>'+
+          katalogSortHTML(q)+
+          katalogChipsHTML(q)+
           isi+
         '</div>'+
       '</div>'+
@@ -6467,6 +6544,23 @@ UJI_SUITE.push(function(){
   uji('T4 pembungkus lama', katalogURL('Specialty','','',''),
       '#/katalog?kategori=Specialty');
   uji('T4 pembungkus lama abaikan Semua', katalogURL('Semua','','',''), '#/katalog');
+});
+UJI_SUITE.push(function(){
+  uji('T5 label facet proses', labelFacet('proses','semi-washed'), 'Semi-washed');
+  uji('T5 label facet rasa', labelFacet('rasa','buah'), 'Buah & Sitrus');
+  uji('T5 label facet kategori apa adanya', labelFacet('kategori','Specialty'), 'Specialty');
+  uji('T5 label facet harga', labelFacet('harga','sedang'), 'Rp50.000–Rp100.000');
+
+  uji('T5 tidak ada filter aktif', filterAktifList({}), []);
+  uji('T5 filter aktif lintas grup',
+      filterAktifList({kategori:'Specialty', proses:'natural', harga:'sedang'})
+        .map(function(f){ return f.grup + ':' + f.id; }),
+      ['kategori:Specialty','proses:natural','harga:sedang']);
+  uji('T5 filter aktif multi-nilai dalam satu grup',
+      filterAktifList({sangrai:'2,3'}).length, 2);
+  // sort dan q bukan filter — tidak ikut jadi chip.
+  uji('T5 sort dan kata kunci bukan chip',
+      filterAktifList({sort:'terbaru', q:'peach'}), []);
 });
 
 </script>
