@@ -2601,10 +2601,11 @@ function removeItem(i){
   konfirmasi('Hapus dari keranjang?', `${item.n} akan dikeluarkan dari keranjangmu.`, 'Hapus', ()=>{
     cart.splice(i,1);
     renderCart();
-    // Halaman yang sedang tampil ikut dibangun ulang. Tanpa ini, baris di
-    // bawah baris yang dihapus tetap membawa indeks lama yang sudah bergeser,
-    // dan klik berikutnya akan mengenai produk yang salah.
-    handleRouting();
+    // Hanya halaman keranjang yang perlu dibangun ulang — di situ baris-baris
+    // membawa indeks yang ikut bergeser setelah splice. Membangun ulang rute
+    // lain akan menutup drawer, melompatkan scroll, dan yang terburuk:
+    // menulis ulang form dari state sehingga isian yang sedang diketik hilang.
+    if(/^#\/keranjang/.test(location.hash)) handleRouting();
     showToast('Barang dihapus dari keranjang.');
   });
 }
@@ -6939,6 +6940,35 @@ UJI_SUITE.push(function(){
       /changeQty\(0,-1\);navigate\('#\/keranjang'\)/.test(h), true);
   uji('T10 tombol hapus tidak menavigasi sebelum konfirmasi',
       /removeItem\(0\);navigate/.test(h), false);
+  cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
+});
+UJI_SUITE.push(function(){
+  var simpan = cart.slice(), hashAsli = location.hash;
+  var aslinya = handleRouting, panggilan = 0;
+  handleRouting = function(){ panggilan++; };   // dihitung, tidak benar-benar merender
+
+  function hapusLalu(hash){
+    cart.length = 0;
+    cart.push({n:'A', p:1000, img:'', q:1, pid:'p1', grind:null, sel:true});
+    cart.push({n:'B', p:2000, img:'', q:1, pid:'p5', grind:null, sel:true});
+    location.hash = hash;
+    panggilan = 0;
+    removeItem(0);
+    if(window.__konfirmYa) window.__konfirmYa();
+    return panggilan;
+  }
+
+  uji('T10 hapus di halaman keranjang membangun ulang halaman',
+      hapusLalu('#/keranjang') > 0, true);
+  // Menghapus dari drawer saat berada di rute lain TIDAK boleh menulis ulang
+  // halaman itu — form yang sedang diisi akan kehilangan ketikannya.
+  uji('T10 hapus dari rute lain tidak menulis ulang halaman',
+      hapusLalu('#/akun/alamat'), 0);
+  uji('T10 barang tetap terhapus walau halaman tidak dibangun ulang',
+      cart.length, 1);
+
+  handleRouting = aslinya;
+  location.hash = hashAsli;
   cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
 });
 
