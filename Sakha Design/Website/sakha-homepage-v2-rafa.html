@@ -2549,7 +2549,10 @@ function renderCart(){
       </div>`).join('');
   }
   const count=cart.reduce((a,c)=>a+c.q,0);
-  const subtotal=cart.reduce((a,c)=>a+c.p*c.q,0);
+  // Jumlah barang dihitung dari SELURUH keranjang (badge menyatakan isi
+  // keranjang), tapi seluruh angka rupiah dihitung dari yang tercentang saja —
+  // itulah yang akan ditagih di checkout.
+  const subtotal=subtotalTerpilih();
   document.getElementById('cartCount').textContent='('+count+')';
   document.getElementById('mbbCartBadge').textContent=count;
   document.getElementById('cartHeaderCount').textContent=count;
@@ -2557,14 +2560,21 @@ function renderCart(){
   document.getElementById('cartTotal').textContent=fmtRupiah(subtotal);
   const remaining=FREE_SHIP_THRESHOLD-subtotal;
   const pct=Math.min(100,(subtotal/FREE_SHIP_THRESHOLD)*100);
+  const terpilihJml = cartTerpilih().length;
+  // Kalau ada baris yang tidak tercentang, angka rupiah di atas bukan lagi
+  // total seluruh keranjang — jelaskan itu, jangan biarkan pengguna
+  // menyangka daftar barang dan totalnya tidak nyambung.
+  const catatanPilih = (terpilihJml < cart.length)
+    ? `Dihitung dari ${terpilihJml} produk terpilih. `
+    : '';
   document.getElementById('shippingFill').style.width=pct+'%';
-  document.getElementById('shippingMsg').innerHTML = remaining>0
+  document.getElementById('shippingMsg').innerHTML = catatanPilih + (remaining>0
     ? `Tambah <b>${fmtRupiah(remaining)}</b> lagi untuk <b>Gratis Ongkir!</b>`
-    : `🎉 Kamu dapat <b>Gratis Ongkir!</b>`;
+    : `🎉 Kamu dapat <b>Gratis Ongkir!</b>`);
   document.getElementById('shipBarFillHome').style.width=pct+'%';
-  document.getElementById('shipBarMsgHome').innerHTML = remaining>0
+  document.getElementById('shipBarMsgHome').innerHTML = catatanPilih + (remaining>0
     ? `Tambah <b>${fmtRupiah(remaining)}</b> lagi untuk <b>Gratis Ongkir!</b>`
-    : `🎉 Kamu dapat <b>Gratis Ongkir!</b>`;
+    : `🎉 Kamu dapat <b>Gratis Ongkir!</b>`);
   // Modul Integrasi WhatsApp: isi pesan panel keranjang otomatis berisi ringkasan isi keranjang + total
   const cartWaBtn=document.getElementById('cartWaBtn');
   if(cartWaBtn){
@@ -2614,6 +2624,12 @@ function removeItem(i){
 // sendiri-sendiri, supaya aturannya tidak terpecah di banyak tempat.
 function cartTerpilih(){
   return cart.filter(function(c){ return c.sel !== false; });
+}
+// Uang yang benar-benar akan dibayar: hanya baris yang tercentang. Dipakai
+// bersama oleh drawer, banner homepage, halaman keranjang, dan checkout —
+// supaya tidak ada satu pun permukaan yang menjanjikan angka berbeda.
+function subtotalTerpilih(){
+  return cartTerpilih().reduce(function(a,c){ return a + c.p*c.q; }, 0);
 }
 function addToCart(n,p,img,pid){
   const existing=cart.find(c=>c.n===n);
@@ -3725,7 +3741,7 @@ function cartIdxTerpilih(){
 // Satu sumber perhitungan untuk ringkasan checkout: subtotal, diskon voucher,
 // ongkir (gratis di atas ambang), dan total.
 function checkoutTotals(){
-  var subtotal = cartTerpilih().reduce(function(a,c){ return a + c.p*c.q; }, 0);
+  var subtotal = subtotalTerpilih();
   var v = checkoutVoucher ? voucherByCode(checkoutVoucher) : null;
   var diskon = voucherPotongan(v, subtotal);
   var ongkirDasar = checkoutKurir ? checkoutKurir.harga : 0;
@@ -7019,6 +7035,30 @@ UJI_SUITE.push(function(){
   cart.length = 0;
   simpan.forEach(function(c){ cart.push(c); });
   checkoutVoucher = vSimpan;
+});
+UJI_SUITE.push(function(){
+  var simpan = cart.slice(), vA = checkoutVoucher;
+  checkoutVoucher = null;
+  cart.length = 0;
+  cart.push({n:'Mahal tidak dipilih', p:250000, img:'', q:1, pid:'p5', grind:null, sel:false});
+  cart.push({n:'Murah dipilih',       p:10000,  img:'', q:1, pid:'p1', grind:null, sel:true });
+
+  uji('T11 subtotal terpilih mengabaikan baris tak tercentang',
+      subtotalTerpilih(), 10000);
+  // Drawer, banner homepage, halaman keranjang dan checkout harus menyebut
+  // angka yang sama persis.
+  uji('T11 subtotal drawer sama dengan subtotal checkout',
+      subtotalTerpilih(), checkoutTotals().subtotal);
+  // Dan yang paling penting: janji gratis ongkir tidak boleh menyala hanya
+  // karena ada barang mahal yang justru TIDAK dibeli.
+  uji('T11 gratis ongkir tidak menyala dari barang tak tercentang',
+      subtotalTerpilih() >= FREE_SHIP_THRESHOLD, false);
+  cart[0].sel = true;
+  uji('T11 gratis ongkir menyala saat barangnya benar-benar dipilih',
+      subtotalTerpilih() >= FREE_SHIP_THRESHOLD, true);
+
+  cart.length = 0; simpan.forEach(function(c){ cart.push(c); });
+  checkoutVoucher = vA;
 });
 
 </script>
