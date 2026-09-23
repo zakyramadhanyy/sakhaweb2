@@ -5981,13 +5981,13 @@ function beliLagi(id){
   o.items.forEach(function(it){
     var p = prod(it.p); if(!p) return;
     var sama = cart.find(function(c){ return c.n === p.name && (c.grind||null) === (it.grind||null); });
-    if(sama) sama.q += it.qty; else cart.push({ n:p.name, p:p.price, img:imgSrc(p.img), q:it.qty, pid:p.id, grind: it.grind||null });
+    if(sama){ sama.q += it.qty; sama.sel = true; }
+    else cart.push({ n:p.name, p:p.price, img:imgSrc(p.img), q:it.qty, pid:p.id, grind: it.grind||null, sel:true });
     n += it.qty;
   });
   renderCart();
-  showToast('✓ '+n+' item dari '+o.id+' masuk keranjang');
-  document.getElementById('cartDrawer').classList.add('open');
-  toggleBackdrop();
+  pulseCartBadge();
+  showToastAksi('✓ '+n+' item dari '+o.id+' masuk keranjang', 'Lihat Keranjang', '#/keranjang');
 }
 // Faktur: dirender ke jendela cetak supaya benar-benar bisa disimpan
 // sebagai PDF, bukan sekadar toast.
