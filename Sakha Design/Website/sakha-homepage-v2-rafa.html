@@ -1678,6 +1678,7 @@ html.locked,body.locked{overflow:hidden;}
   .co-step span{width:22px;height:22px;font-size:11px;}
   .co-line{margin:0 6px;min-width:10px;}
 }
+
 </style>
 </head>
 <body data-auth="tamu">
@@ -7418,6 +7419,38 @@ UJI_SUITE.push(function(){
   });
   uji('NAV aturan ponsel (selebar penuh) tetap utuh', adaAturanPonsel, true);
 });
+
+UJI_SUITE.push(function(){
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var css = sumber.slice(sumber.indexOf('<style>'), sumber.indexOf('</style>'));
+
+  // Tingkat tablet sudah ada di stylesheet ini dan menangani 11 komponen.
+  // Asersi berikut menjaganya, bukan menambah lapisan baru di atasnya —
+  // aturan bertumpuk pada rentang yang sama akan saling menimpa diam-diam.
+  var i = css.indexOf('@media (min-width:768px) and (max-width:1024px)');
+  uji('TAB tingkat tablet 768-1024px ada', i >= 0, true);
+
+  var blok = '';
+  if(i >= 0){
+    var j = css.indexOf('{', i), d = 0, k;
+    for(k = j; k < css.length; k++){
+      if(css[k] === '{') d++;
+      else if(css[k] === '}'){ d--; if(!d) break; }
+    }
+    blok = css.slice(j, k);
+  }
+  uji('TAB grid produk 3 kolom di tablet',
+      /\.product-grid\{[^}]*repeat\(3,1fr\)/.test(blok), true);
+  uji('TAB artikel/outlet/merch/testi 2 kolom di tablet',
+      /\.article-grid,\.outlet-grid,\.merch-grid,\.testi-grid\{[^}]*repeat\(2,1fr\)/.test(blok), true);
+  uji('TAB keranjang & checkout lentur di tablet',
+      /minmax\(260px,300px\)/.test(blok), true);
+
+  // Tidak boleh ada blok media lain yang menimpa rentang yang sama.
+  uji('TAB tidak ada lapisan tablet tumpang tindih',
+      /@media \(min-width:901px\) and \(max-width:1180px\)/.test(css), false);
+});
+
 
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
 UJI_SUITE.push(function(){
