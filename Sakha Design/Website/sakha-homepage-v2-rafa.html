@@ -797,6 +797,22 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 .empty-state p{color:var(--muted);font-size:13.5px;margin-bottom:20px;line-height:1.6;}
 
 .pcard-link{color:inherit;text-decoration:none;display:block;}
+/* Seluruh kartu produk adalah satu tautan ke PDP; ikon favorit & WhatsApp
+   berada di atasnya lewat z-index dan tetap punya aksi sendiri. */
+.pcard-tautan{color:inherit;text-decoration:none;display:flex;flex-direction:column;height:100%;}
+.rev-foto{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.rev-foto-btn{width:72px;height:72px;padding:0;border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;background:var(--cream);cursor:pointer;}
+.rev-foto-btn img{width:100%;height:100%;object-fit:cover;display:block;}
+.rev-foto-btn:hover{border-color:var(--burnt-sienna);}
+.rv-foto-wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px;}
+.rv-foto-prev{display:flex;gap:8px;flex-wrap:wrap;}
+.rv-foto-item{position:relative;width:64px;height:64px;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border);display:block;}
+.rv-foto-item img{width:100%;height:100%;object-fit:cover;display:block;}
+.rv-foto-item button{position:absolute;top:2px;right:2px;width:20px;height:20px;border:0;border-radius:50%;background:rgba(17,25,33,.72);color:#fff;font-size:11px;line-height:1;cursor:pointer;}
+.rv-foto-add{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border:1.5px dashed var(--border);border-radius:var(--radius-md);font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;}
+.rv-foto-add:hover{border-color:var(--burnt-sienna);color:var(--burnt-sienna);}
+.pcard-tautan:focus-visible{outline:2px solid var(--burnt-sienna);outline-offset:2px;}
+.pcard{cursor:pointer;}
 .stock-note{display:block;font-size:11px;font-weight:700;margin-bottom:8px;}
 .stock-note.low{color:var(--warning);}
 .stock-note.out{color:var(--error);}
@@ -1806,21 +1822,21 @@ body.locked{overflow:hidden;}
       <button type="button" aria-label="Geser diskon kilat ke kanan" onclick="frailGeser(1)">&#8250;</button>
     </div>
     <div class="product-grid" id="flashRail">
-      <div class="pcard">
+      <div class="pcard" data-pid="p3">
         <div class="img-wrap"><span class="badge badge-left badge-sale">FLASH SALE</span><span class="badge badge-right badge-off">-20%</span><img src="assets-v2/p3.jpg" alt="Blueberry Wellcream" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty</div><div class="name">Blueberry Wellcream 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div><button class="atc" onclick="addToCart('Blueberry Wellcream',95000,'assets-v2/p3.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty</div><div class="name">Blueberry Wellcream 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div></div>
       </div>
-      <div class="pcard">
+      <div class="pcard" data-pid="p6">
         <div class="img-wrap"><span class="badge badge-left badge-sale">FLASH SALE</span><span class="badge badge-right badge-off">-15%</span><img src="assets-v2/p6.jpg" alt="Bleubailess Chocotart" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Espresso Blend</div><div class="name">Bleubailess Chocotart 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div><button class="atc" onclick="addToCart('Bleubailess Chocotart',91000,'assets-v2/p6.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Espresso Blend</div><div class="name">Bleubailess Chocotart 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div></div>
       </div>
-      <div class="pcard">
+      <div class="pcard" data-pid="p1">
         <div class="img-wrap"><span class="badge badge-left badge-sale">FLASH SALE</span><img src="assets-v2/p1.jpg" alt="Moonlime Tenjifer" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty</div><div class="name">Moonlime Tenjifer 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div><button class="atc" onclick="addToCart('Moonlime Tenjifer',92000,'assets-v2/p1.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty</div><div class="name">Moonlime Tenjifer 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div></div>
       </div>
-      <div class="pcard">
+      <div class="pcard" data-pid="p4">
         <div class="img-wrap"><span class="badge badge-left badge-out">HABIS</span><img src="assets-v2/p4.jpg" alt="Sun of Peach" style="filter:grayscale(.5)" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="name">Sun of Peach 150gr</div><div class="price-row"><span class="price" style="color:rgba(255,255,255,.4)">Rp 79.000</span></div><button class="atc" disabled>Stok Habis</button></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="name">Sun of Peach 150gr</div><div class="price-row"><span class="price" style="color:rgba(255,255,255,.4)">Rp 79.000</span></div></div>
       </div>
     </div>
   </div>
@@ -1843,53 +1859,53 @@ body.locked{overflow:hidden;}
     </div>
     <p class="produk-count" id="produkCount" role="status" aria-live="polite"></p>
     <div class="product-grid" id="allProductsGrid">
-      <div class="pcard" id="cat-pcard-0" data-cat="Specialty">
+      <div class="pcard" id="cat-pcard-0" data-cat="Specialty" data-pid="p1">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p1.jpg" alt="Moonlime Tenjifer" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Medium Roast · Kintamani, Bali</div><div class="name">Moonlime Tenjifer — Arabika Kintamani 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div><button class="atc" onclick="addToCart('Moonlime Tenjifer',92000,'assets-v2/p1.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Medium Roast · Kintamani, Bali</div><div class="name">Moonlime Tenjifer — Arabika Kintamani 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-1" data-cat="Specialty">
+      <div class="pcard" id="cat-pcard-1" data-cat="Specialty" data-pid="p2">
         <div class="img-wrap"><span class="badge badge-left badge-lowstock">Sisa 4</span><img src="assets-v2/p2.jpg" alt="Alexander Le Grape" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Medium Roast · Argopuro, Jawa</div><div class="name">Alexander Le Grape — Arabika Argopuro 200gr</div><div class="price-row"><span class="price">Rp 98.000</span></div><button class="atc" onclick="addToCart('Alexander Le Grape',98000,'assets-v2/p2.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Medium Roast · Argopuro, Jawa</div><div class="name">Alexander Le Grape — Arabika Argopuro 200gr</div><div class="price-row"><span class="price">Rp 98.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-2" data-cat="Specialty">
+      <div class="pcard" id="cat-pcard-2" data-cat="Specialty" data-pid="p3">
         <div class="img-wrap"><span class="badge badge-left badge-off">-20%</span><img src="assets-v2/p3.jpg" alt="Blueberry Wellcream" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Light Roast · Kerinci, Sumatra</div><div class="name">Blueberry Wellcream — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div><button class="atc" onclick="addToCart('Blueberry Wellcream',95000,'assets-v2/p3.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Light Roast · Kerinci, Sumatra</div><div class="name">Blueberry Wellcream — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-3" data-cat="Specialty">
+      <div class="pcard" id="cat-pcard-3" data-cat="Specialty" data-pid="p4">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p4.jpg" alt="Sun of Peach" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Sun of Peach — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 79.000</span></div><button class="atc" onclick="addToCart('Sun of Peach',79000,'assets-v2/p4.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Sun of Peach — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 79.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-4" data-cat="Espresso Blend">
+      <div class="pcard" id="cat-pcard-4" data-cat="Espresso Blend" data-pid="p5">
         <div class="img-wrap"><span class="badge badge-left badge-lowstock">Sisa 8</span><img src="assets-v2/p5.jpg" alt="Milkinho Da Cerra" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Espresso Blend</div><div class="roast-tag">🔥 Dark Roast · Brazil</div><div class="name">Milkinho Da Cerra — Arabika Brazil 200gr</div><div class="price-row"><span class="price">Rp 89.000</span></div><button class="atc" onclick="addToCart('Milkinho Da Cerra',89000,'assets-v2/p5.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Espresso Blend</div><div class="roast-tag">🔥 Dark Roast · Brazil</div><div class="name">Milkinho Da Cerra — Arabika Brazil 200gr</div><div class="price-row"><span class="price">Rp 89.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-5" data-cat="Espresso Blend">
+      <div class="pcard" id="cat-pcard-5" data-cat="Espresso Blend" data-pid="p6">
         <div class="img-wrap"><span class="badge badge-left badge-off">-15%</span><img src="assets-v2/p6.jpg" alt="Bleubailess Chocotart" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Espresso Blend</div><div class="roast-tag">🔥 Medium Roast · Kerinci, Sumatra</div><div class="name">Bleubailess Chocotart — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div><button class="atc" onclick="addToCart('Bleubailess Chocotart',91000,'assets-v2/p6.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Espresso Blend</div><div class="roast-tag">🔥 Medium Roast · Kerinci, Sumatra</div><div class="name">Bleubailess Chocotart — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-6" data-cat="Commodity Blend">
+      <div class="pcard" id="cat-pcard-6" data-cat="Commodity Blend" data-pid="p7">
         <div class="img-wrap"><img src="assets-v2/p7.jpg" alt="75% Arabica 25% Robusta" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Commodity Blend</div><div class="roast-tag">🔥 Medium-Dark Roast · Blend Nusantara</div><div class="name">75% Arabica 25% Robusta 200gr</div><div class="price-row"><span class="price">Rp 58.000</span><span class="old-price">Rp 68.000</span></div><button class="atc" onclick="addToCart('75% Arabica 25% Robusta',58000,'assets-v2/p7.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Commodity Blend</div><div class="roast-tag">🔥 Medium-Dark Roast · Blend Nusantara</div><div class="name">75% Arabica 25% Robusta 200gr</div><div class="price-row"><span class="price">Rp 58.000</span><span class="old-price">Rp 68.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-7" data-cat="Commodity Blend">
+      <div class="pcard" id="cat-pcard-7" data-cat="Commodity Blend" data-pid="p8">
         <div class="img-wrap"><img src="assets-v2/p8.jpg" alt="50% Arabica 50% Robusta" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Commodity Blend</div><div class="roast-tag">🔥 Dark Roast · Blend Nusantara</div><div class="name">50% Arabica 50% Robusta 200gr</div><div class="price-row"><span class="price">Rp 52.000</span></div><button class="atc" onclick="addToCart('50% Arabica 50% Robusta',52000,'assets-v2/p8.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Commodity Blend</div><div class="roast-tag">🔥 Dark Roast · Blend Nusantara</div><div class="name">50% Arabica 50% Robusta 200gr</div><div class="price-row"><span class="price">Rp 52.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-8" data-cat="Coffee Drip">
+      <div class="pcard" id="cat-pcard-8" data-cat="Coffee Drip" data-pid="p9">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p9.jpg" alt="Weekly Coffee Drip Fruit Basket" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Coffee Drip</div><div class="roast-tag">🔥 Light Roast · Multi-Origin</div><div class="name">Weekly Coffee Drip — Fruit Basket (isi 7)</div><div class="price-row"><span class="price">Rp 65.000</span></div><button class="atc" onclick="addToCart('Fruit Basket Drip',65000,'assets-v2/p9.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Coffee Drip</div><div class="roast-tag">🔥 Light Roast · Multi-Origin</div><div class="name">Weekly Coffee Drip — Fruit Basket (isi 7)</div><div class="price-row"><span class="price">Rp 65.000</span></div></div>
       </div>
-      <div class="pcard" data-cat="Specialty">
+      <div class="pcard" data-cat="Specialty" data-pid="p10">
         <div class="img-wrap"><img src="assets-v2/p10.jpg" alt="Victoria La Marqueesa" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Victoria La Marqueesa — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 82.000</span></div><button class="atc" onclick="addToCart('Victoria La Marqueesa',82000,'assets-v2/p10.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Victoria La Marqueesa — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 82.000</span></div></div>
       </div>
-      <div class="pcard" data-cat="Specialty">
+      <div class="pcard" data-cat="Specialty" data-pid="p11">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p11.jpg" alt="Honey Berry Sweety" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Medium Roast · Gayo &amp; Kerinci</div><div class="name">Honey Berry Sweety — Gayo Honey 200gr</div><div class="price-row"><span class="price">Rp 96.000</span></div><button class="atc" onclick="addToCart('Honey Berry Sweety',96000,'assets-v2/p11.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Specialty</div><div class="roast-tag">🔥 Medium Roast · Gayo &amp; Kerinci</div><div class="name">Honey Berry Sweety — Gayo Honey 200gr</div><div class="price-row"><span class="price">Rp 96.000</span></div></div>
       </div>
-      <div class="pcard" data-cat="Coffee Drip">
+      <div class="pcard" data-cat="Coffee Drip" data-pid="p12">
         <div class="img-wrap"><img src="assets-v2/p12.jpg" alt="Coffee Drip Bundling Package" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Coffee Drip</div><div class="roast-tag">🔥 Light Roast · Kintamani, Bali</div><div class="name">Coffee Drip Bundling — Kintamani (isi 5)</div><div class="price-row"><span class="price">Rp 58.000</span></div><button class="atc" onclick="addToCart('Coffee Drip Bundling',58000,'assets-v2/p12.jpg')">+ Keranjang</button></div>
+        <div class="body"><div class="cat-tag">Coffee Drip</div><div class="roast-tag">🔥 Light Roast · Kintamani, Bali</div><div class="name">Coffee Drip Bundling — Kintamani (isi 5)</div><div class="price-row"><span class="price">Rp 58.000</span></div></div>
       </div>
     </div>
     <div class="load-more-wrap"><button class="btn btn-ghost" type="button" onclick="muatLebihBanyak()">Muat Lebih Banyak</button></div>
@@ -2901,21 +2917,23 @@ function pcardHTML(p){
     : p.badge==='new' ? '<span class="badge badge-left badge-new">BARU</span>' : '';
   var off = p.oldPrice ? '<span class="badge badge-right badge-off">-'+Math.round((1-p.price/p.oldPrice)*100)+'%</span>' : '';
   var oldPriceHTML = p.oldPrice ? '<span class="old-price">'+rupiah(p.oldPrice)+'</span>' : '';
-  var disabled = p.stock<=0 ? 'disabled' : '';
   var img = esc(imgSrc(p.img));
   return ''+
     '<div class="pcard" data-cat="'+esc(p.cat)+'">'+
-      '<a class="pcard-link" href="#/produk/'+p.id+'"><div class="img-wrap">'+badge+off+'<img data-img="'+p.img+'" alt="'+esc(p.name)+'"></div></a>'+
-      '<div class="body">'+
-        '<div class="cat-tag">'+esc(p.catLabel)+'</div>'+
-        '<a class="pcard-link" href="#/produk/'+p.id+'"><div class="name">'+esc(p.name)+'</div></a>'+
-        '<div class="pcard-meta"><span aria-hidden="true">★</span> '+p.rating+
-          '<span class="visually-hidden"> dari 5</span> · '+p.sold+' terjual</div>'+
-        '<div class="price-row"><span class="price">'+rupiah(p.price)+'</span>'+oldPriceHTML+'</div>'+
-        '<div class="pcard-loc"><span aria-hidden="true">📍</span> '+esc(ROASTERY_LOKASI)+'</div>'+
-        stockNote(p)+
-        '<button class="atc" '+disabled+' onclick="addToCart('+"'"+esc(p.name).replace(/'/g,"\\'")+"'"+','+p.price+','+"'"+esc(img)+"'"+",'"+p.id+"'"+')">'+(p.stock<=0?'Stok Habis':'+ Keranjang')+'</button>'+
-      '</div>'+
+      // Seluruh kartu adalah satu tautan ke halaman produk: pengguna membuka
+      // detailnya dulu, bukan menambahkan langsung dari kartu.
+      '<a class="pcard-tautan" href="#/produk/'+p.id+'">'+
+        '<div class="img-wrap">'+badge+off+'<img data-img="'+p.img+'" alt="'+esc(p.name)+'"></div>'+
+        '<div class="body">'+
+          '<div class="cat-tag">'+esc(p.catLabel)+'</div>'+
+          '<div class="name">'+esc(p.name)+'</div>'+
+          '<div class="pcard-meta"><span aria-hidden="true">★</span> '+p.rating+
+            '<span class="visually-hidden"> dari 5</span> · '+p.sold+' terjual</div>'+
+          '<div class="price-row"><span class="price">'+rupiah(p.price)+'</span>'+oldPriceHTML+'</div>'+
+          '<div class="pcard-loc"><span aria-hidden="true">📍</span> '+esc(ROASTERY_LOKASI)+'</div>'+
+          stockNote(p)+
+        '</div>'+
+      '</a>'+
       '<button class="pcard-wish" type="button" data-wish="'+p.id+'" aria-pressed="'+wishlistPunya(p.id)+'" title="'+(wishlistPunya(p.id)?'Hapus dari favorit':'Simpan ke favorit')+'" onclick="wishlistToggle(\''+p.id+'\')">'+(wishlistPunya(p.id)?'♥':'♡')+'</button>'+
       '<a class="pcard-wa" target="_blank" rel="noopener" href="'+waLink('Halo Sakha, saya mau tanya soal '+p.name+'.')+'">💬</a>'+
     '</div>';
@@ -3367,19 +3385,64 @@ function pdpAccordionHTML(p){
   '</div>';
 }
 // ── Ulasan produk: gabungan contoh bawaan + ulasan yang ditulis pengguna ──
+// Foto ulasan sengaja dibatasi: tiap foto diperkecil dulu sebelum disimpan,
+// karena localStorage hanya menampung ~5MB untuk SELURUH aplikasi — keranjang,
+// pesanan, alamat, poin. Satu foto HP mentah (2-4MB, +33% karena base64) bisa
+// menghabiskannya sendirian dan membuat semua state berhenti tersimpan.
+var BATAS_FOTO_ULASAN = 3;
+var FOTO_SISI_MAKS = 900;     // piksel, sisi terpanjang
+var FOTO_MUTU = 0.7;          // kualitas JPEG
+
+function fotoTerbatas(daftar){
+  return (daftar || []).slice(0, BATAS_FOTO_ULASAN);
+}
+
+// Menjalankan penyimpanan dan melaporkan berhasil/gagal. saveState() sendiri
+// menelan error kuota diam-diam; untuk foto kita justru perlu tahu, supaya
+// bisa jujur ke pengguna alih-alih membuang datanya tanpa kabar.
+// saveState() menunda penulisan 60ms lewat setTimeout dan menelan errornya,
+// jadi kegagalan kuota tidak akan pernah sampai ke pemanggil. Untuk foto kita
+// menulis langsung supaya hasilnya bisa diketahui saat itu juga.
+function simpanLangsung(){
+  localStorage.setItem(LS_KEY, JSON.stringify(snapshotState()));
+}
+function simpanFotoTerjaga(simpan){
+  try { simpan(); return true; }
+  catch(e){ return false; }
+}
+
 var REVIEW_SAMPLES = [
-  {oleh:'Dimas P.', rating:5, teks:'Aromanya kebayang dari kemasan dibuka. Seduh V60 rasio 1:15, manisnya keluar banget.'},
-  {oleh:'Rani S.',  rating:4, teks:'Enak, cuma buat saya agak asam. Cocok buat yang suka profil terang.'},
-  {oleh:'Yoga A.',  rating:5, teks:'Sudah pesan tiga kali. Konsisten, tanggal sangrai selalu baru.'}
+  {oleh:'Dimas P.', rating:5, teks:'Aromanya kebayang dari kemasan dibuka. Seduh V60 rasio 1:15, manisnya keluar banget.', foto:['p1','kafehero']},
+  {oleh:'Rani S.',  rating:4, teks:'Enak, cuma buat saya agak asam. Cocok buat yang suka profil terang.', foto:['gal1','p3','gal3']},
+  {oleh:'Yoga A.',  rating:5, teks:'Sudah pesan tiga kali. Konsisten, tanggal sangrai selalu baru.', foto:['p5','gal3']}
 ];
 function reviewsFor(pid){
   var punya = REVIEWS.filter(function(r){ return r.pid === pid; });
   var p = prod(pid);
   var n = p ? Math.min(3, Math.max(1, Math.round((p.reviews||6)/8))) : 2;
   var contoh = REVIEW_SAMPLES.slice(0, n).map(function(s, i){
-    return { oleh:s.oleh, rating:s.rating, teks:s.teks, tgl:'2026-0'+(7+i)+'-1'+(i+2) };
+    // Foto contoh disimpan sebagai KUNCI aset, bukan data URL — diubah jadi
+    // alamat gambar saat dirender.
+    return { oleh:s.oleh, rating:s.rating, teks:s.teks, tgl:'2026-0'+(7+i)+'-1'+(i+2),
+             foto:(s.foto||[]).map(imgSrc) };
   });
   return punya.concat(contoh);
+}
+// Baris thumbnail foto di bawah teks ulasan. Diklik membuka versi besar
+// lewat modal yang sudah ada — tidak perlu lightbox baru.
+function revFotoHTML(r){
+  var foto = fotoTerbatas(r.foto);
+  if(!foto.length) return '';
+  return '<div class="rev-foto">'+foto.map(function(src, i){
+    return '<button type="button" class="rev-foto-btn" aria-label="Lihat foto '+(i+1)+' dari ulasan ini" '+
+      'onclick="bukaFotoUlasan('+"'"+esc(src).replace(/'/g,"\\'")+"'"+')">'+
+      '<img src="'+esc(src)+'" alt="" loading="lazy" decoding="async"></button>';
+  }).join('')+'</div>';
+}
+function bukaFotoUlasan(src){
+  openModal('Foto dari pembeli',
+    '<img src="'+esc(src)+'" alt="Foto ulasan pembeli" style="width:100%;border-radius:var(--radius-md);display:block">',
+    '<button class="btn btn-primary" type="button" onclick="closeModal()">Tutup</button>');
 }
 function reviewListHTML(pid){
   var list = reviewsFor(pid);
@@ -3388,7 +3451,7 @@ function reviewListHTML(pid){
     return '<div class="rev-item"><div class="rev-head"><b>'+esc(r.oleh||USER.name)+'</b>'+
       '<span class="stars">'+starsHTML(r.rating)+'</span><span>'+esc(r.tgl||'')+'</span>'+
       (r.orderId ? '<span>· pesanan '+esc(r.orderId)+'</span>' : '')+'</div>'+
-      '<p>'+esc(r.teks)+'</p></div>';
+      '<p>'+esc(r.teks)+'</p>'+revFotoHTML(r)+'</div>';
   }).join('')+'</div>';
 }
 
@@ -5438,20 +5501,21 @@ window.addEventListener('hashchange', handleRouting);
 var HOME_PRODUCT_NAME_ALIAS = { 'Fruit Basket Drip': 'Weekly Coffee Drip — Fruit Basket', 'Coffee Drip Bundling': 'Coffee Drip Bundling — Kintamani' };
 function wireHomeProductLinks(){
   document.querySelectorAll('#homeView .pcard').forEach(function(card){
-    var btn = card.querySelector('.atc');
-    var onclickAttr = btn && btn.getAttribute('onclick');
-    var m = onclickAttr && onclickAttr.match(/addToCart\('([^']*)'/);
-    if(!m) return;
-    var rawName = m[1];
-    var fullName = HOME_PRODUCT_NAME_ALIAS[rawName] || rawName;
-    var p = PRODUCTS.find(function(x){ return x.name===fullName; });
+    // Produk dikenali dari data-pid. Sebelumnya dibaca dari atribut onclick
+    // tombol "+ Keranjang"; tombol itu sudah dihapus supaya pengguna membuka
+    // halaman produk dulu, jadi identitasnya kini melekat di kartunya sendiri.
+    var pid = card.getAttribute('data-pid');
+    var p = pid && prod(pid);
     if(!p) return;
-    card.querySelectorAll('.img-wrap, .name').forEach(function(el){
-      el.style.cursor = 'pointer';
-      el.addEventListener('click', function(){ navigate('#/produk/'+p.id); });
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function(ev){
+      // Ikon favorit dan WhatsApp punya aksinya sendiri — jangan dibajak.
+      if(ev.target.closest('.pcard-wish, .pcard-wa, a[href^="http"]')) return;
+      navigate('#/produk/' + p.id);
     });
   });
 }
+
 window.addEventListener('DOMContentLoaded', function(){ loadIMG(); handleRouting(); wireHomeProductLinks(); });
 
 var fsCdTimer=null;
@@ -6406,6 +6470,77 @@ function ulasTeksInput(orderId, pid){
   var c = document.getElementById('cnt-'+safe);
   if(c) c.textContent = ta.value.length + '/' + RV_MAX;
 }
+// Foto diperkecil di browser sebelum disimpan: sisi terpanjang dibatasi
+// FOTO_SISI_MAKS dan dikeluarkan sebagai JPEG mutu FOTO_MUTU. Foto 3MB jadi
+// sekitar 60-120KB. Tanpa ini satu foto saja bisa memenuhi kuota localStorage
+// dan membuat SELURUH state aplikasi berhenti tersimpan.
+function perkecilFoto(file, selesai){
+  var pembaca = new FileReader();
+  pembaca.onload = function(){
+    var im = new Image();
+    im.onload = function(){
+      var skala = Math.min(1, FOTO_SISI_MAKS / Math.max(im.width, im.height));
+      var kanvas = document.createElement('canvas');
+      kanvas.width = Math.round(im.width * skala);
+      kanvas.height = Math.round(im.height * skala);
+      kanvas.getContext('2d').drawImage(im, 0, 0, kanvas.width, kanvas.height);
+      selesai(kanvas.toDataURL('image/jpeg', FOTO_MUTU));
+    };
+    im.onerror = function(){ selesai(null); };
+    im.src = pembaca.result;
+  };
+  pembaca.onerror = function(){ selesai(null); };
+  pembaca.readAsDataURL(file);
+}
+
+function draftUlas(orderId, pid){
+  var k = ulasKey(orderId, pid);
+  if(!__ulasDraft[k]) __ulasDraft[k] = { rating:0, teks:'', foto:[] };
+  if(!__ulasDraft[k].foto) __ulasDraft[k].foto = [];
+  return __ulasDraft[k];
+}
+
+function pratinjauFotoHTML(orderId, pid){
+  var foto = fotoTerbatas(draftUlas(orderId, pid).foto);
+  return foto.map(function(src, i){
+    return '<span class="rv-foto-item"><img src="'+esc(src)+'" alt="Foto '+(i+1)+'">'+
+      '<button type="button" aria-label="Hapus foto '+(i+1)+'" '+
+      'onclick="hapusFotoUlasan(\''+orderId+'\',\''+pid+'\','+i+')">✕</button></span>';
+  }).join('');
+}
+
+function segarkanPratinjauFoto(orderId, pid){
+  var safe = ulasKey(orderId, pid).replace(/[^a-zA-Z0-9]/g,'_');
+  var el = document.getElementById('fotoPrev-'+safe);
+  if(el) el.innerHTML = pratinjauFotoHTML(orderId, pid);
+  var tambah = document.querySelector('label[for="fotoInput-'+safe+'"]');
+  if(tambah) tambah.hidden = draftUlas(orderId, pid).foto.length >= BATAS_FOTO_ULASAN;
+}
+
+function pilihFotoUlasan(input, orderId, pid){
+  var d = draftUlas(orderId, pid);
+  var berkas = Array.prototype.slice.call(input.files || []);
+  var sisa = BATAS_FOTO_ULASAN - d.foto.length;
+  if(berkas.length > sisa){
+    showToast('Maksimal '+BATAS_FOTO_ULASAN+' foto — sisanya tidak ikut ditambahkan.');
+    berkas = berkas.slice(0, Math.max(0, sisa));
+  }
+  input.value = '';   // supaya memilih berkas yang sama lagi tetap memicu onchange
+  berkas.forEach(function(f){
+    perkecilFoto(f, function(dataURL){
+      if(!dataURL){ showToast('Satu foto gagal dibaca, dilewati.'); return; }
+      d.foto = fotoTerbatas(d.foto.concat([dataURL]));
+      segarkanPratinjauFoto(orderId, pid);
+    });
+  });
+}
+
+function hapusFotoUlasan(orderId, pid, idx){
+  var d = draftUlas(orderId, pid);
+  d.foto.splice(idx, 1);
+  segarkanPratinjauFoto(orderId, pid);
+}
+
 function bukaModalUlasan(orderId, pid){
   var p = prod(pid); if(!p) return;
   var k = ulasKey(orderId, pid), safe = k.replace(/[^a-zA-Z0-9]/g,'_');
@@ -6430,6 +6565,15 @@ function bukaModalUlasan(orderId, pid){
       '<span class="rv-count" id="cnt-'+safe+'">'+(d.teks||'').length+'/'+RV_MAX+'</span>'+
     '</div>'+
     '<span class="field-err" id="err-'+safe+'" hidden></span>'+
+    '<span class="rv-label">Foto <em>(opsional, maksimal '+BATAS_FOTO_ULASAN+')</em></span>'+
+    '<div class="rv-foto-wrap">'+
+      '<div id="fotoPrev-'+safe+'" class="rv-foto-prev">'+pratinjauFotoHTML(orderId, pid)+'</div>'+
+      '<label class="rv-foto-add" for="fotoInput-'+safe+'">+ Tambah Foto'+
+        '<input type="file" id="fotoInput-'+safe+'" accept="image/*" multiple hidden '+
+        'onchange="pilihFotoUlasan(this,\''+orderId+'\',\''+pid+'\')">'+
+      '</label>'+
+    '</div>'+
+    '<span class="field-hint">Foto diperkecil otomatis sebelum disimpan supaya tidak memenuhi penyimpanan browser.</span>'+
     '<label class="checkline"><input type="checkbox" id="anon-'+safe+'"> Kirim sebagai anonim — namamu ditampilkan sebagai "Pembeli Sakha".</label>',
     '<button class="btn btn-ghost" type="button" onclick="closeModal()">Batal</button>'+
     '<button class="btn btn-primary" type="button" onclick="kirimUlasan(\''+orderId+'\',\''+pid+'\')">Kirim Penilaian</button>');
@@ -6447,12 +6591,25 @@ function kirimUlasan(orderId, pid){
     if(ta) ta.focus();
     return;
   }
-  REVIEWS.unshift({ orderId:orderId, pid:pid, rating:d.rating, teks:teks, tgl:new Date().toISOString().slice(0,10),
-    oleh: (anon && anon.checked) ? 'Pembeli Sakha' : USER.name });
+  var ulasan = { orderId:orderId, pid:pid, rating:d.rating, teks:teks, tgl:new Date().toISOString().slice(0,10),
+    oleh: (anon && anon.checked) ? 'Pembeli Sakha' : USER.name, foto: fotoTerbatas(d.foto) };
+  REVIEWS.unshift(ulasan);
   delete __ulasDraft[k];
-  saveState();
+
+  // Foto bisa membuat localStorage penuh. Kalau itu terjadi, yang dikorbankan
+  // adalah fotonya — ulasan teksnya tetap tersimpan — dan pengguna diberi tahu.
+  // Membiarkannya gagal diam-diam akan membuat keranjang dan pesanan ikut
+  // berhenti tersimpan tanpa siapa pun sadar.
+  var pesan = '✓ Terima kasih atas penilaianmu!';
+  if(ulasan.foto.length && !simpanFotoTerjaga(simpanLangsung)){
+    ulasan.foto = [];
+    simpanFotoTerjaga(simpanLangsung);
+    pesan = 'Ulasan tersimpan, tapi fotonya tidak muat di penyimpanan browser.';
+  } else if(!ulasan.foto.length){
+    saveState();
+  }
   closeModal();
-  showToast('✓ Terima kasih atas penilaianmu!');
+  showToast(pesan);
   handleRouting();
 }
 
@@ -6759,6 +6916,96 @@ function selfTest(){
               ' lulus, ' + __ujiGagal + ' gagal —');
   return __ujiGagal;
 }
+// ── Uji: tombol "+ Keranjang" hilang dari jalur konsumen ──────────
+UJI_SUITE.push(function(){
+  uji('CARD kartu konsumen tidak lagi punya tombol keranjang',
+      /class="atc"/.test(pcardHTML(prod('p1'))), false);
+  uji('CARD seluruh kartu jadi tautan ke PDP',
+      /class="pcard-tautan"[^>]*href="#\/produk\/p1"/.test(pcardHTML(prod('p1'))), true);
+
+  // Markup statis beranda: buang blok <script> dulu supaya yang dihitung
+  // benar-benar markup, bukan kode pembangun kartu B2B.
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var markup = sumber.replace(/<script\b[\s\S]*?<\/script>/gi, '');
+  uji('CARD tidak ada tombol keranjang tersisa di markup statis',
+      (markup.match(/class="atc"/g) || []).length, 0);
+
+  // Jalur grosir punya aturan MOQ sendiri dan TIDAK boleh ikut dihapus.
+  uji('CARD kartu grosir B2B tetap punya tombolnya',
+      /class="atc"/.test(pcardB2bHTML(prod('p1'))), true);
+});
+
+UJI_SUITE.push(function(){
+  // wireHomeProductLinks dulu mengenali produk dari atribut onclick tombol
+  // keranjang. Tombolnya sudah tiada, jadi tiap kartu statis WAJIB membawa
+  // data-pid — tanpa itu kartu beranda berhenti bisa diklik sama sekali.
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var markup = sumber.replace(/<script\b[\s\S]*?<\/script>/gi, '');
+  var kartu = markup.match(/<div class="pcard"[^>]*>/g) || [];
+  var tanpaPid = kartu.filter(function(k){ return k.indexOf('data-pid=') < 0; });
+  uji('CARD setiap kartu statis membawa data-pid', tanpaPid.length, 0);
+
+  var pidTakDikenal = [];
+  kartu.forEach(function(k){
+    var m = k.match(/data-pid="([^"]+)"/);
+    if(m && !prod(m[1]) && pidTakDikenal.indexOf(m[1]) < 0) pidTakDikenal.push(m[1]);
+  });
+  uji('CARD data-pid kartu statis menunjuk produk yang ada', pidTakDikenal, []);
+
+  uji('CARD wireHomeProductLinks tidak lagi bergantung pada tombol keranjang',
+      /\.atc/.test(wireHomeProductLinks.toString()), false);
+});
+
+// ── Uji: foto pada ulasan ─────────────────────────────────────────
+UJI_SUITE.push(function(){
+  uji('FOTO batas maksimal foto per ulasan', BATAS_FOTO_ULASAN, 3);
+  uji('FOTO lebih dari batas dipangkas',
+      fotoTerbatas(['a','b','c','d','e']).length, 3);
+  uji('FOTO daftar kosong aman', fotoTerbatas(null), []);
+
+  var contoh = REVIEW_SAMPLES.filter(function(r){ return (r.foto||[]).length >= 2; });
+  uji('FOTO ulasan contoh punya 2-3 foto supaya tata letaknya terlihat',
+      contoh.length >= 3, true);
+
+  // Foto contoh disimpan sebagai kunci aset. Kunci yang salah ketik akan
+  // menghasilkan src kosong dan thumbnail rusak, tanpa error apa pun.
+  var kunciRusak = [];
+  REVIEW_SAMPLES.forEach(function(r){
+    (r.foto||[]).forEach(function(k){ if(!imgSrc(k) && kunciRusak.indexOf(k)<0) kunciRusak.push(k); });
+  });
+  uji('FOTO semua kunci foto contoh menunjuk aset yang ada', kunciRusak, []);
+
+  var h = reviewListHTML('p1');
+  uji('FOTO thumbnail dirender di daftar ulasan', /rev-foto/.test(h), true);
+
+  // Penjaga kuota: kalau penyimpanan menolak, ulasan teksnya TETAP tersimpan
+  // dan fotonya yang dikorbankan — bukan sebaliknya, dan bukan gagal diam-diam.
+  var hasil = simpanFotoTerjaga(function(){ throw new Error('QuotaExceededError'); });
+  uji('FOTO kuota penuh dilaporkan, bukan ditelan diam-diam', hasil, false);
+  uji('FOTO penyimpanan lancar melaporkan berhasil',
+      simpanFotoTerjaga(function(){ return true; }), true);
+});
+
+UJI_SUITE.push(function(){
+  var simpanR = REVIEWS.slice(), simpanO = ORDERS.slice();
+  var asliGet = document.getElementById, tetap = {};
+  document.getElementById = function(id){ if(!tetap[id]) tetap[id] = asliGet.call(document, id); return tetap[id]; };
+  try {
+    var k = ulasKey('SKH-UJI', 'p1'), safe = k.replace(/[^a-zA-Z0-9]/g,'_');
+    __ulasDraft[k] = { rating:5, teks:'Kopinya mantap sekali rasanya', foto:['a','b','c','d','e'] };
+    document.getElementById('ta-'+safe).value = 'Kopinya mantap sekali rasanya';
+    REVIEWS.length = 0;
+    kirimUlasan('SKH-UJI', 'p1');
+    uji('FOTO ulasan terkirim membawa fotonya', (REVIEWS[0] && REVIEWS[0].foto || []).length, 3);
+    uji('FOTO ulasan terkirim menyimpan teksnya', REVIEWS[0] && REVIEWS[0].teks, 'Kopinya mantap sekali rasanya');
+  } finally {
+    document.getElementById = asliGet;
+    REVIEWS.length = 0; simpanR.forEach(function(r){ REVIEWS.push(r); });
+    ORDERS.length = 0; simpanO.forEach(function(o){ ORDERS.push(o); });
+    delete __ulasDraft[ulasKey('SKH-UJI','p1')];
+  }
+});
+
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
 UJI_SUITE.push(function(){
   uji('T1 semua produk punya added',
