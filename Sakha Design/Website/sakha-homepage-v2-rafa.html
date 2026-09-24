@@ -648,7 +648,8 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
   .benefit-item span{font-size:12.5px;}
 
   /* ── Shop by Category: accordion gelap, 1 item terbuka + CTA ── */
-  .categories{justify-content:flex-start;}
+  /* Tinggi mengikuti isi (bukan 1 layar penuh) — akordeon kini 4 item, sisa layar jadi ruang kosong. */
+  .categories{justify-content:flex-start;min-height:0;padding-bottom:40px;}
   .categories .section-head{margin-bottom:16px;}
   .categories .section-head p{display:none;}
   .cat-scroll{display:none;}
@@ -693,6 +694,8 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
   .shop-all .section-head .eyebrow{display:none;}
   .shop-all .section-head p{display:none;}
   .shop-all .section-head h2{font-size:20px;}
+  /* margin -24px bawaan desktop mengandalkan jarak 40px di bawah tab; di sini jaraknya 10px → teks menimpa tab. */
+  .shop-all .produk-count{margin:6px 0 14px;text-align:left;}
   .filter-tabs{flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;margin-bottom:10px;padding-bottom:2px;margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px;}
   .filter-tabs::-webkit-scrollbar{display:none;}
   .filter-tab{flex-shrink:0;padding:11px 16px;font-size:12px;}  /* FIX 2.6 — tinggi ±44px */
@@ -1664,7 +1667,7 @@ html.locked,body.locked{overflow:hidden;}
    dan logo mengambil sisa ruang di tengah — tetap seimbang berapa pun lebar
    layarnya, bukan kebetulan pas di satu ukuran. */
 @media (max-width:767.98px){
-  .nav-main{gap:8px;padding:10px 12px;}
+  .nav-main{gap:8px;padding:10px 16px;}
   .nav-logo{flex:1;display:flex;justify-content:center;min-width:0;}
   .nav-logo img{height:27px;width:auto;max-width:100%;}
   .nav-actions{margin-left:0;gap:2px;}
@@ -7552,6 +7555,56 @@ UJI_SUITE.push(function(){
   // Baris kedua: stepper (~104px) + harga, harus muat berdua.
   uji('ROW stepper dan harga muat berdampingan di 390px',
       lengkap && (104 + 90 + gap) <= isiTersedia, true);
+});
+
+UJI_SUITE.push(function(){
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var css = sumber.slice(sumber.indexOf('<style>'), sumber.indexOf('</style>'));
+
+  function blok(syarat){
+    var kumpul = '', dari = 0, i;
+    while((i = css.indexOf('@media ' + syarat, dari)) >= 0){
+      var j = css.indexOf('{', i), d = 0, k;
+      for(k = j; k < css.length; k++){
+        if(css[k] === '{') d++;
+        else if(css[k] === '}'){ d--; if(!d) break; }
+      }
+      kumpul += css.slice(j, k); dari = k;
+    }
+    return kumpul;
+  }
+  // Ambil nilai padding horizontal (nilai kedua dari "atas kanan") sebuah selektor.
+  function gutter(teks, sel){
+    var re = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{[^}]*?padding:\\s*([^;}]+)');
+    var m = teks.match(re);
+    if(!m) return null;
+    var p = m[1].trim().split(/\s+/);
+    var h = p.length > 1 ? p[1] : p[0];
+    var n = h.match(/([\d.]+)px/);
+    return n ? parseFloat(n[1]) : null;
+  }
+
+  var hp = blok('(max-width:767.98px)') + blok('(max-width:900px)');
+
+  // Gutter ponsel diseragamkan ke 16px — standar Material/HIG untuk lebar
+  // compact, dan .container memang sudah memakainya (16 ponsel / 24 tablet /
+  // 32 desktop). Yang dulu menyimpang: .nav-main (12px) dan .cat-scroll (24px).
+  var nav = gutter(hp, '.nav-main');
+  uji('GUT gutter navbar terbaca', nav !== null, true);
+  uji('GUT navbar memakai gutter 16px', nav, 16);
+
+  // .cat-scroll memang bergutter 24px, tapi ia display:none di ponsel — jadi
+  // angkanya tidak pernah terlihat. Yang dijaga di sini adalah fakta itu:
+  // kalau suatu saat ia ditampilkan lagi, uji ini gagal dan mengingatkan
+  // bahwa gutter-nya perlu diselaraskan dulu.
+  uji('GUT cat-scroll memang disembunyikan di ponsel',
+      /\.cat-scroll\{[^}]*display:\s*none/.test(blok('(max-width:767.98px)')), true);
+
+  // Dengan gutter 16px navbar harus muat sampai layar 320px tanpa aturan
+  // pengecualian — itu alasan utama memilih 16px daripada 24px.
+  var ikon = 36, ham = 44, gap = 8, logo = 111;
+  var tetap = (nav === null) ? Infinity : (ham + ikon * 3 + gap * 3 + nav * 2);
+  uji('GUT navbar masih muat di layar 320px', (320 - tetap) >= logo, true);
 });
 
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
