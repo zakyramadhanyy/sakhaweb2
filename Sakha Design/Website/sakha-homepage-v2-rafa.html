@@ -228,34 +228,7 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 
 /* ── Gratis ongkir progress (homepage, gamified ala Otten) ── */
 
-/* ── home-mobile-quick: blok akses cepat ala Otten, hanya tampil di mobile
-   (sejajar breakpoint header 768px) — isi memakai fitur asli Sakha (outlet,
-   poin, artikel, grosir/B2B, flash sale), bukan fitur baru. ── */
-.home-mobile-quick{display:none;}
-.hmq-transaksi{display:flex;align-items:center;gap:14px;background:var(--warm);border-radius:var(--radius-md);padding:14px 16px;margin:12px 16px 0;text-decoration:none;color:var(--ink);}
-.hmq-transaksi-ic{flex:none;width:40px;height:40px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--burnt-sienna-hover);}
-.hmq-transaksi-ic svg{width:20px;height:20px;}
-.hmq-transaksi-txt{flex:1;min-width:0;}
-.hmq-transaksi-txt b{display:block;font-size:13.5px;}
-.hmq-transaksi-txt span{display:block;font-size:11.5px;color:var(--muted);margin-top:1px;}
-.hmq-transaksi-cta{flex:none;font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--burnt-sienna-hover);text-transform:uppercase;}
-.hmq-disclaimer{font-size:11px;color:var(--muted);background:var(--cream);border-radius:var(--radius-sm);padding:10px 12px;margin:8px 16px 0;line-height:1.5;}
-.hmq-chips{display:flex;gap:8px;overflow-x:auto;padding:12px 16px 4px;}
-.hmq-chips::-webkit-scrollbar{display:none;}
-.hmq-chip{all:unset;flex:none;font-family:var(--font-mono);font-size:12px;font-weight:700;padding:9px 16px;border-radius:var(--radius-pill);border:1.5px solid var(--border);color:var(--muted);text-transform:uppercase;text-decoration:none;cursor:pointer;}
-.hmq-chip.active{background:var(--blue-vulcan);border-color:var(--ink);color:#fff;}
-.hmq-quicklinks{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:12px 16px 16px;text-align:center;}
-.hmq-quicklinks a{text-decoration:none;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:6px;}
-.hmq-ql-ic{width:48px;height:48px;border-radius:50%;background:var(--cream);display:flex;align-items:center;justify-content:center;color:var(--burnt-sienna-hover);}
-.hmq-ql-ic svg{width:22px;height:22px;}
-.hmq-quicklinks span{font-size:10.5px;font-weight:600;line-height:1.25;}
-.flash-wa-cta{display:none;align-items:center;gap:8px;font-family:var(--font-mono);font-size:11.5px;font-weight:700;color:var(--success);text-decoration:none;margin-top:8px;}
-.flash-wa-cta svg{width:16px;height:16px;}
 @media (max-width:767.98px){
-  /* FIX 2.12 — blok ini duduk di atas hero tanpa scroll-snap-align, jadi
-     berisiko dilewati begitu saja oleh snap. */
-  .home-mobile-quick{display:block;scroll-snap-align:start;scroll-margin-top:var(--mobile-nav-h,104px);}
-  .flash-wa-cta{display:inline-flex;}
   .flash{background:var(--cream);}
 }
 
@@ -1698,6 +1671,25 @@ html.locked,body.locked{overflow:hidden;}
   .nav-icon-btn{width:36px;height:36px;}
   .nav-search{margin-top:8px;}
 }
+
+/* ── BARIS PRODUK KERANJANG DI PONSEL ──────────────────────────────────
+   Baris ini butuh 462px (checkbox 16 + gambar 64 + stepper 104 + harga 90
+   + kolom aksi 86 + gap 70 + padding 32) padahal layar 390px hanya
+   menyediakan 358px, dan .cart-row tidak punya flex-wrap — sehingga nama
+   produk tergencet sampai tak terbaca. Dipakai halaman Keranjang DAN
+   Checkout langkah 1.
+
+   min-width:0 pada .cr-info itu wajib, bukan hiasan: tanpa itu sebuah item
+   flex menolak menyusut di bawah lebar kontennya, jadi flex-wrap saja tidak
+   menyelesaikan apa pun — barisnya tetap terdorong keluar. */
+@media (max-width:767.98px){
+  .cart-row{flex-wrap:wrap;gap:10px;}
+  .cart-row img{width:56px;height:56px;}
+  .cr-info{flex:1 1 140px;min-width:0;}
+  .qty-stepper{order:3;}
+  .cr-price{order:4;min-width:auto;margin-left:auto;text-align:right;}
+  .cr-aksi{order:5;flex-basis:100%;flex-direction:row;justify-content:flex-end;gap:14px;align-items:center;}
+}
 </style>
 </head>
 <body data-auth="tamu">
@@ -1803,30 +1795,6 @@ html.locked,body.locked{overflow:hidden;}
 
 <div id="homeView">
 <!-- ══ Gratis ongkir progress bar (visible di homepage, gamified ala Otten) ══ -->
-<!-- ══ Home mobile quick-access (pola Otten dkk) — hanya tampil di mobile.
-     Semua tautan menuju fitur Sakha yang sudah ada: outlet, poin, artikel,
-     grosir/B2B, flash sale — bukan fitur baru. ══ -->
-<div class="home-mobile-quick">
-  <a class="hmq-transaksi" href="#/outlet">
-    <span class="hmq-transaksi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="13" height="11"/><path d="M14 10h4l4 4v3h-8z"/><circle cx="6" cy="19" r="2"/><circle cx="17.5" cy="19" r="2"/></svg></span>
-    <span class="hmq-transaksi-txt"><b>Tipe Transaksi</b><span>Pengiriman, atau ambil langsung di outlet</span></span>
-    <span class="hmq-transaksi-cta">Atur</span>
-  </a>
-  <p class="hmq-disclaimer">Sakha hanya menerima pembayaran lewat Virtual Account/QRIS resmi di checkout kami — jangan transfer ke rekening pribadi mana pun.</p>
-  <div class="hmq-chips" role="tablist" aria-label="Filter beranda">
-    <button type="button" class="hmq-chip active">Semua</button>
-    <button type="button" class="hmq-chip" data-hmq-scroll=".flash">Flash Sale</button>
-    <button type="button" class="hmq-chip" data-hmq-scroll="#semua-produk">Produk Baru</button>
-    <a class="hmq-chip" href="#/artikel">Artikel</a>
-  </div>
-  <div class="hmq-quicklinks">
-    <a href="#/flash-sale"><span class="hmq-ql-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h7l-1 8 11-14h-7l1-6Z"/></svg></span><span>Flash Sale</span></a>
-    <a href="#/poin/tukar"><span class="hmq-ql-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span><span>Tukar Poin</span></a>
-    <a href="#/artikel"><span class="hmq-ql-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3Z"/><path d="M8 8h7M8 12h7"/></svg></span><span>Panduan</span></a>
-    <a href="#/outlet"><span class="hmq-ql-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s7-6.6 7-12a7 7 0 0 0-14 0c0 5.4 7 12 7 12Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><span>Temukan Outlet</span></a>
-    <a href="#/b2b"><span class="hmq-ql-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span><span>Belanja Grosir</span></a>
-  </div>
-</div>
 
 <!-- ══ 3. HERO ══ -->
 <section class="hero" id="heroSection">
@@ -1952,7 +1920,6 @@ html.locked,body.locked{overflow:hidden;}
     <div class="flash-head">
       <div class="flash-title">
         <h2>Flash <em>Sale</em> ⚡</h2>
-        <a class="flash-wa-cta" target="_blank" rel="noopener" href="https://wa.me/6281234567890?text=Halo%20Sakha%20Coffee!%20Saya%20mau%20tanya%20soal%20Flash%20Sale."><svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2C6.48 2 2 6.48 2 12c0 1.85.5 3.58 1.38 5.07L2 22l5.07-1.33A9.94 9.94 0 0 0 12 22c5.52 0 10-4.48 10-10S17.52 2 12 2Zm5.2 14.2c-.22.62-1.28 1.18-1.76 1.24-.45.06-.93.09-3-.63-2.53-.9-4.16-3.46-4.29-3.62-.13-.16-1.02-1.36-1.02-2.6 0-1.24.65-1.85.88-2.1.22-.25.5-.31.66-.31h.48c.16 0 .37-.02.56.44.22.53.75 1.83.82 1.96.06.13.1.29.02.46-.08.16-.13.26-.25.4-.13.15-.27.33-.38.44-.13.13-.26.27-.11.53.15.26.67 1.1 1.44 1.78.99.88 1.82 1.16 2.08 1.29.26.13.41.11.56-.06.16-.18.65-.76.83-1.02.18-.26.35-.22.59-.13.24.09 1.53.72 1.79.85.26.13.44.2.5.31.06.13.06.72-.16 1.34Z"/></svg>Tanya kami di WhatsApp</a>
       </div>
       <div class="countdown" id="countdown">
         <div class="cd-box"><b id="cdH">03</b><span>Jam</span></div>
@@ -2358,16 +2325,6 @@ document.getElementById('mbbCartBtn').addEventListener('click',(e)=>{
     try{ localStorage.setItem(KEY,'1'); }catch(e){}
   });
 })();
-
-// ── Home mobile quick-access: chip scroll ke section terkait ──
-document.querySelectorAll('.hmq-chip[data-hmq-scroll]').forEach(function(chip){
-  chip.addEventListener('click',function(){
-    document.querySelectorAll('.hmq-chip').forEach(function(c){ c.classList.remove('active'); });
-    chip.classList.add('active');
-    var target = document.querySelector(chip.getAttribute('data-hmq-scroll'));
-    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
-  });
-});
 
 // ── Hero slider: maks 5 slide, auto-rotate 5 detik, pause on hover/focus ──
 (function(){
@@ -7542,6 +7499,59 @@ UJI_SUITE.push(function(){
   var tetap = lengkap ? (ham + (ikon * 3) + (gap * 3) + (pad * 2)) : Infinity;
   uji('NAVM bagian berlebar tetap muat di layar 360px', tetap <= 360, true);
   uji('NAVM masih ada ruang layak untuk logo (>=110px)', 360 - tetap >= 110, true);
+});
+
+UJI_SUITE.push(function(){
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var css = sumber.slice(sumber.indexOf('<style>'), sumber.indexOf('</style>'));
+
+  function blok(syarat){
+    var kumpul = '', dari = 0, i;
+    while((i = css.indexOf('@media ' + syarat, dari)) >= 0){
+      var j = css.indexOf('{', i), d = 0, k;
+      for(k = j; k < css.length; k++){
+        if(css[k] === '{') d++;
+        else if(css[k] === '}'){ d--; if(!d) break; }
+      }
+      kumpul += css.slice(j, k); dari = k;
+    }
+    return kumpul;
+  }
+  function px(teks, pola){
+    var m = teks.match(pola);
+    return m ? parseFloat(m[1]) : null;
+  }
+
+  var hp = blok('(max-width:767.98px)');
+
+  // Baris produk keranjang harus boleh patah. Tanpa flex-wrap ia dipaksa
+  // berdiri dalam satu baris selebar 462px di layar yang cuma punya 358px,
+  // dan nama produk tergencet sampai tak terbaca.
+  uji('ROW baris keranjang boleh turun baris',
+      /\.cart-row\{[^}]*flex-wrap:\s*wrap/.test(hp), true);
+
+  // Tanpa min-width:0 sebuah item flex menolak menyusut di bawah lebar
+  // kontennya, jadi flex-wrap saja tidak cukup — ia tetap mendorong keluar.
+  uji('ROW kolom info boleh menyusut (min-width:0)',
+      /\.cr-info\{[^}]*min-width:\s*0/.test(hp), true);
+
+  var gbr = px(hp, /\.cart-row img\{[^}]*width:\s*([\d.]+)px/);
+  var gap = px(hp, /\.cart-row\{[^}]*gap:\s*([\d.]+)px/);
+  uji('ROW nilai gambar & gap terbaca dari CSS',
+      [gbr, gap].filter(function(v){ return v === null; }).length, 0);
+
+  // Aritmetika pada layar 390px: lebar kontainer 390 - padding 16x2 = 358,
+  // dikurangi padding baris 16x2 = 326 untuk isinya.
+  var lengkap = (gbr !== null && gap !== null);
+  var isiTersedia = 390 - 32 - 32;
+  var baris1Tetap = lengkap ? (18 + gbr + gap * 2) : Infinity;   // checkbox + gambar + 2 gap
+  var sisaUntukNama = isiTersedia - baris1Tetap;
+  uji('ROW baris pertama menyisakan ruang layak untuk nama produk (>=140px)',
+      sisaUntukNama >= 140, true);
+
+  // Baris kedua: stepper (~104px) + harga, harus muat berdua.
+  uji('ROW stepper dan harga muat berdampingan di 390px',
+      lengkap && (104 + 90 + gap) <= isiTersedia, true);
 });
 
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
