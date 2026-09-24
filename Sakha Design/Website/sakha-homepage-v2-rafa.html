@@ -1740,6 +1740,30 @@ html.locked,body.locked{overflow:hidden;}
     margin:0!important;padding:0!important;overflow:visible!important;
     clip:auto!important;white-space:nowrap!important;border:0!important;
   }
+
+  /* Akordeon: konten halaman tampil TEPAT di bawah menu yang aktif, bukan
+     setelah seluruh daftar menu. Hanya urutan tampilan yang diubah (CSS order):
+     menu s.d. yang aktif → konten → sisa menu. DOM & logika tidak disentuh.
+     .acct-side dilebur (display:contents) supaya item menu dan konten jadi
+     saudara dalam satu kolom flex; "kartu" daftar menu digambar ulang per item. */
+  .acct-shell{display:flex;flex-direction:column;gap:0;align-items:stretch;} /* bukan start: konten harus selebar layar, bukan selebar isinya */
+  .acct-side{display:contents;}
+  .acct-side > *{order:1;}
+  .acct-side a.active ~ *{order:3;}
+  .acct-shell > :not(.acct-side){
+    order:2;margin:0;border-radius:0;box-shadow:none;
+    background:var(--cream);padding:14px 12px;
+    border:1.5px solid var(--border);border-top:0;border-bottom:1px solid var(--border);
+  }
+  .acct-side a,.acct-side button.acct-link,.acct-side a.acct-link,.acct-side .gap{
+    background:var(--surface);border-left:1.5px solid var(--border);border-right:1.5px solid var(--border);
+  }
+  .acct-side .gap{margin:0;height:4px;border-bottom:1px solid var(--border);}
+  .acct-side > a:first-of-type{border-top:1.5px solid var(--border);border-radius:var(--radius-lg) var(--radius-lg) 0 0;}
+  .acct-side .keluar{border-bottom:1.5px solid var(--border)!important;border-radius:0 0 var(--radius-lg) var(--radius-lg)!important;}
+  /* Penanda akordeon: ▾ tertutup, ▴ sedang dibuka. */
+  .acct-side a:not(.keluar)::after{content:"";margin-left:auto;width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translate(-2px,-2px);opacity:.45;}
+  .acct-side a.active::after{transform:rotate(-135deg) translate(-2px,-2px);opacity:.8;}
 }
 </style>
 </head>
@@ -4576,6 +4600,12 @@ function accountSidebarHTML(active){
     item('wishlist','Favorit Saya','#/akun/wishlist')+
     item('poin','Poin & Voucher','#/poin')+
     item('ulasan','Ulasan Saya','#/akun/ulasan')+
+    // Pintu ke portal grosir hanya muncul untuk yang memang punya sesi grosir.
+    // Akun eceran tidak perlu melihat menu yang tak pernah dipakainya; calon
+    // pembeli grosir tetap menemukannya lewat menu hamburger.
+    (B2B_SESSION
+      ? '<div class="gap" aria-hidden="true"></div>'+item('faktur','Grosir & Faktur','#/b2b')
+      : '')+
     '<button class="acct-link keluar" type="button" title="Keluar" aria-label="Keluar" onclick="keluarReguler()">'+ACCT_RAIL_ICONS.keluar+'<span class="visually-hidden">Keluar</span></button>'+
   '</nav>';
 }
@@ -7265,6 +7295,20 @@ handleRouting = function(){ __handleRoutingAsli(); sesudahRender(); };
 // langkah pasca-render dipasang sebagai pendengar terpisah (urutannya
 // setelah pendengar router, sehingga DOM sudah tergambar).
 window.addEventListener('hashchange', sesudahRender);
+// Akordeon menu akun (mobile): konten lama di atas menu yang diketuk ikut
+// tertutup, sehingga halaman "naik" dan menu aktif terlempar keluar layar.
+// Setelah berpindah halaman akun, gulir supaya menu aktif duduk tepat di
+// bawah header — kontennya langsung terlihat di bawahnya.
+function acctAkordeonFokus(){
+  if(!window.matchMedia || !window.matchMedia('(max-width:767.98px)').matches) return;
+  var a = document.querySelector('#routedView .acct-side a.active');
+  if(!a) return;
+  var navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--mobile-nav-h')) || 104;
+  var top = a.getBoundingClientRect().top;
+  if(top >= navH && top <= window.innerHeight * 0.5) return;   // sudah terlihat nyaman
+  window.scrollTo(0, Math.max(0, window.scrollY + top - navH - 8));
+}
+window.addEventListener('hashchange', function(){ requestAnimationFrame(acctAkordeonFokus); });
 window.addEventListener('DOMContentLoaded', sesudahRender);
 
 // ── FIX 4.4 — penanda halaman aktif di bilah bawah mobile ──────────────
@@ -7747,6 +7791,32 @@ UJI_SUITE.push(function(){
   // sesi grosir aktif, dan uji tidak boleh bergantung pada keadaan login.
   uji('MENU sidebar B2B memakai kelas yang sama',
       /class="acct-side"/.test(String(b2bAccountSidebarHTML)), true);
+});
+
+UJI_SUITE.push(function(){
+  var simpan = B2B_SESSION;
+  try {
+    // Tanpa sesi grosir, menu akun konsumen tetap bersih — pengguna eceran
+    // tidak perlu melihat pintu yang tidak pernah ia pakai. Penemuan untuk
+    // calon pembeli grosir tetap ada di menu hamburger.
+    B2B_SESSION = null;
+    var tanpa = accountSidebarHTML('pesanan');
+    uji('GROSIR menu tidak muncul tanpa sesi grosir',
+        /Grosir & Faktur/.test(tanpa), false);
+
+    B2B_SESSION = { nama:'Uji', email:'a@b.c', perusahaan:'PT Uji', npwp:'-', telepon:'-', net30:true };
+    var dengan = accountSidebarHTML('pesanan');
+    uji('GROSIR menu muncul saat sesi grosir aktif',
+        /Grosir &amp; Faktur|Grosir & Faktur/.test(dengan), true);
+    uji('GROSIR menu mengarah ke portal grosir',
+        /href="#\/b2b"/.test(dengan), true);
+
+    // Jumlah item bertambah tepat satu, bukan menggeser atau menggandakan.
+    function jml(h){ return (h.match(/<a /g) || []).length; }
+    uji('GROSIR hanya satu item yang ditambahkan', jml(dengan) - jml(tanpa), 1);
+  } finally {
+    B2B_SESSION = simpan;
+  }
 });
 
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
