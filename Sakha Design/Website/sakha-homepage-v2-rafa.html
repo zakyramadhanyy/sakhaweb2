@@ -188,9 +188,10 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 .nav-cart-btn:hover{background:var(--aqua-deep-mid);}
 .nav-cart-badge[hidden]{display:none!important;}
 /* Mobile: header cukup ☰ + logo + ikon keranjang dalam satu baris — Akun dan
-   Keranjang sudah ada di bilah bawah (.mbb), jadi teks & tombol akun disembunyikan. */
+   Keranjang sudah ada di bilah bawah (.mbb), jadi teks keranjang, tombol akun
+   (tamu maupun login) dan wishlist disembunyikan — wishlist ada di halaman Akun. */
 @media (max-width:767.98px){
-  .nav-auth{display:none;}
+  .nav-auth,.nav-actions .acct-wrap,#navWishlistLink{display:none!important;}
   .nav-cart-label{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;} /* tetap terbaca pembaca layar */
   .nav-cart-btn{width:44px;height:44px;padding:0;margin-left:0;justify-content:center;}
   .nav-cart-btn svg{width:19px;height:19px;}
@@ -1679,6 +1680,24 @@ html.locked,body.locked{overflow:hidden;}
   .co-line{margin:0 6px;min-width:10px;}
 }
 
+
+/* ── NAVBAR PONSEL ─────────────────────────────────────────────────────
+   Sebelumnya baris navbar butuh 420px (hamburger 44 + logo 140 + 3 ikon 132
+   + gap 24x3 + padding 32) padahal viewport ponsel 360-414px, sehingga ikon
+   aksi selalu terlempar ke baris sendiri.
+
+   Kuncinya bukan sekadar mengecilkan angka: logo diberi flex:1 dan isinya
+   dipusatkan, sehingga hamburger terkunci di kiri, aksi terkunci di kanan,
+   dan logo mengambil sisa ruang di tengah — tetap seimbang berapa pun lebar
+   layarnya, bukan kebetulan pas di satu ukuran. */
+@media (max-width:767.98px){
+  .nav-main{gap:8px;padding:10px 12px;}
+  .nav-logo{flex:1;display:flex;justify-content:center;min-width:0;}
+  .nav-logo img{height:27px;width:auto;max-width:100%;}
+  .nav-actions{margin-left:0;gap:2px;}
+  .nav-icon-btn{width:36px;height:36px;}
+  .nav-search{margin-top:8px;}
+}
 </style>
 </head>
 <body data-auth="tamu">
@@ -1718,8 +1737,8 @@ html.locked,body.locked{overflow:hidden;}
           </div>
           <h6>Pencarian Populer</h6>
           <div class="chip-row">
-            <span class="chip">Kopi Infused</span>
-            <span class="chip">Drip Bag</span>
+            <span class="chip">Specialty Filter</span>
+            <span class="chip">Tanpa Ampas</span>
             <span class="chip">Blueberry</span>
             <span class="chip">Karamel</span>
             <span class="chip">Robusta</span>
@@ -1772,9 +1791,10 @@ html.locked,body.locked{overflow:hidden;}
     <!-- Tiap tab = halaman katalog dengan URL sendiri (bisa dibagikan, Back jalan).
          Tab aktif ditentukan navCatSync() dari location.hash, bukan dari klik. -->
     <a class="nav-cat" data-nav="semua" href="#/katalog">Semua</a>
-    <a class="nav-cat" data-nav="infused" href="#/katalog?kategori=infused">Kopi Infused</a>
-    <a class="nav-cat" data-nav="klasik" href="#/katalog?kategori=klasik">Kopi Klasik</a>
-    <a class="nav-cat" data-nav="drip" href="#/katalog?kategori=drip">Drip Bag</a>
+    <a class="nav-cat" data-nav="specialty-filter" href="#/katalog?kategori=specialty-filter">Specialty Filter</a>
+    <a class="nav-cat" data-nav="specialty-espresso" href="#/katalog?kategori=specialty-espresso">Specialty Espresso</a>
+    <a class="nav-cat" data-nav="commodity-blend" href="#/katalog?kategori=commodity-blend">Commodity Blend</a>
+    <a class="nav-cat" data-nav="kopi-tanpa-ampas" href="#/katalog?kategori=kopi-tanpa-ampas">Kopi Tanpa Ampas</a>
     <!-- Sorotan (merchandising), bukan kategori — dipisah ke kanan. -->
     <a class="nav-cat nav-cat-sorot" data-nav="terlaris" href="#/katalog?sort=terlaris">Terlaris</a>
     <a class="nav-cat nav-cat-sorot" data-nav="promo" href="#/katalog?promo=diskon">Promo</a>
@@ -1855,13 +1875,14 @@ html.locked,body.locked{overflow:hidden;}
     <div class="section-head">
       <span class="eyebrow">Jelajahi</span>
       <h2>Belanja per <em>Kategori</em></h2>
-      <p>Dari kopi infused khas Sakha, kopi klasik, sampai drip bag siap seduh.</p>
+      <p>Dari specialty untuk seduh manual & espresso, blend harian, sampai kopi tanpa ampas siap seduh.</p>
     </div>
   </div>
   <div class="cat-scroll">
-    <a class="cat-card" href="#/katalog?kategori=infused"><img src="assets-v2/p3.jpg" alt="Kopi Infused" decoding="async" loading="lazy" width="300" height="300"><div class="cat-label"><b>Kopi Infused</b><span>Diinfus buah &amp; rempah</span></div></a>
-    <a class="cat-card" href="#/katalog?kategori=klasik"><img id="srcCatSpecialty" src="assets-v2/p1.jpg" alt="Kopi Klasik" decoding="async" loading="lazy" width="300" height="300"><div class="cat-label"><b>Kopi Klasik</b><span>Single origin &amp; blend</span></div></a>
-    <a class="cat-card" href="#/katalog?kategori=drip"><img src="assets-v2/p9.jpg" alt="Drip Bag" decoding="async" loading="lazy" width="300" height="300"><div class="cat-label"><b>Drip Bag</b><span>Praktis, tanpa alat</span></div></a>
+    <a class="cat-card" href="#/katalog?kategori=specialty-filter"><img id="srcCatSpecialty" src="assets-v2/p1.jpg" alt="Specialty Filter" decoding="async" loading="lazy" width="300" height="300"><div class="cat-label"><b>Specialty Filter</b><span>Untuk seduh manual</span></div></a>
+    <a class="cat-card" href="#/katalog?kategori=specialty-espresso"><img src="assets-v2/p5.jpg" alt="Specialty Espresso" decoding="async" loading="lazy" width="300" height="300"><div class="cat-label"><b>Specialty Espresso</b><span>Espresso &amp; kopi susu</span></div></a>
+    <a class="cat-card" href="#/katalog?kategori=commodity-blend"><img src="assets-v2/p7.jpg" alt="Commodity Blend" decoding="async" loading="lazy" width="300" height="300"><div class="cat-label"><b>Commodity Blend</b><span>Harian, ekonomis</span></div></a>
+    <a class="cat-card" href="#/katalog?kategori=kopi-tanpa-ampas"><img src="assets-v2/p9.jpg" alt="Kopi Tanpa Ampas" decoding="async" loading="lazy" width="300" height="300"><div class="cat-label"><b>Kopi Tanpa Ampas</b><span>Drip bag siap seduh</span></div></a>
     <!-- Ready to Drink & Alat Seduh belum punya produk → disembunyikan sampai tersedia.
          #srcCatAlat tetap ada karena gambarnya dipakai ulang oleh hero & artikel. -->
     <a class="cat-card" hidden><img src="assets-v2/gal1.jpg" alt="Ready to Drink" decoding="async" loading="lazy" width="640" height="800"><div class="cat-label"><b>Ready to Drink</b><span>Siap minum, dingin segar</span></div></a>
@@ -1873,39 +1894,52 @@ html.locked,body.locked{overflow:hidden;}
     <div class="acc-item active">
       <button class="acc-head" type="button">
         <span class="acc-plus">+</span>
-        <span class="acc-title">Kopi Infused</span>
+        <span class="acc-title">Specialty Filter</span>
       </button>
       <div class="acc-panel">
-        <img src="assets-v2/p3.jpg" alt="Kopi Infused" decoding="async" loading="lazy" width="300" height="300">
+        <img src="assets-v2/p1.jpg" alt="Specialty Filter" decoding="async" loading="lazy" width="300" height="300">
         <div class="acc-info">
-          <p>Arabika pilihan yang diinfus buah &amp; rempah — blueberry, anggur, peach, karamel. Ciri khas Sakha.</p>
-          <a class="btn btn-primary btn-sm acc-cta" href="#/katalog?kategori=infused">Lihat Produk →</a>
+          <p>Arabika specialty single origin untuk seduh manual — V60, pour-over, sampai Japanese iced.</p>
+          <a class="btn btn-primary btn-sm acc-cta" href="#/katalog?kategori=specialty-filter">Lihat Produk →</a>
         </div>
       </div>
     </div>
     <div class="acc-item">
       <button class="acc-head" type="button">
         <span class="acc-plus">+</span>
-        <span class="acc-title">Kopi Klasik</span>
+        <span class="acc-title">Specialty Espresso</span>
       </button>
       <div class="acc-panel">
-        <img src="assets-v2/p1.jpg" alt="Kopi Klasik" decoding="async" loading="lazy" width="300" height="300">
+        <img src="assets-v2/p5.jpg" alt="Specialty Espresso" decoding="async" loading="lazy" width="300" height="300">
         <div class="acc-info">
-          <p>Single origin &amp; blend tanpa infus, untuk seduh manual maupun kopi susu harian.</p>
-          <a class="btn btn-primary btn-sm acc-cta" href="#/katalog?kategori=klasik">Lihat Produk →</a>
+          <p>Racikan arabika untuk espresso &amp; kopi susu — badan tebal, manis karamel.</p>
+          <a class="btn btn-primary btn-sm acc-cta" href="#/katalog?kategori=specialty-espresso">Lihat Produk →</a>
         </div>
       </div>
     </div>
     <div class="acc-item">
       <button class="acc-head" type="button">
         <span class="acc-plus">+</span>
-        <span class="acc-title">Drip Bag</span>
+        <span class="acc-title">Commodity Blend</span>
       </button>
       <div class="acc-panel">
-        <img src="assets-v2/p9.jpg" alt="Drip Bag" decoding="async" loading="lazy" width="300" height="300">
+        <img src="assets-v2/p7.jpg" alt="Commodity Blend" decoding="async" loading="lazy" width="300" height="300">
         <div class="acc-info">
-          <p>Praktis diseduh kapan saja tanpa alat tambahan — tinggal tuang air panas.</p>
-          <a class="btn btn-primary btn-sm acc-cta" href="#/katalog?kategori=drip">Lihat Produk →</a>
+          <p>Kombinasi arabika &amp; robusta harian yang ekonomis, cocok untuk konsumsi rutin.</p>
+          <a class="btn btn-primary btn-sm acc-cta" href="#/katalog?kategori=commodity-blend">Lihat Produk →</a>
+        </div>
+      </div>
+    </div>
+    <div class="acc-item">
+      <button class="acc-head" type="button">
+        <span class="acc-plus">+</span>
+        <span class="acc-title">Kopi Tanpa Ampas</span>
+      </button>
+      <div class="acc-panel">
+        <img src="assets-v2/p9.jpg" alt="Kopi Tanpa Ampas" decoding="async" loading="lazy" width="300" height="300">
+        <div class="acc-info">
+          <p>Drip bag praktis diseduh kapan saja tanpa alat tambahan — tinggal tuang air panas.</p>
+          <a class="btn btn-primary btn-sm acc-cta" href="#/katalog?kategori=kopi-tanpa-ampas">Lihat Produk →</a>
         </div>
       </div>
     </div>
@@ -1936,19 +1970,19 @@ html.locked,body.locked{overflow:hidden;}
     <div class="product-grid" id="flashRail">
       <div class="pcard" data-pid="p3">
         <div class="img-wrap"><span class="badge badge-left badge-sale">FLASH SALE</span><span class="badge badge-right badge-off">-20%</span><img src="assets-v2/p3.jpg" alt="Blueberry Wellcream" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="name">Blueberry Wellcream 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="name">Blueberry Wellcream 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div></div>
       </div>
       <div class="pcard" data-pid="p6">
         <div class="img-wrap"><span class="badge badge-left badge-sale">FLASH SALE</span><span class="badge badge-right badge-off">-15%</span><img src="assets-v2/p6.jpg" alt="Bleubailess Chocotart" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="name">Bleubailess Chocotart 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Espresso</div><div class="name">Bleubailess Chocotart 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div></div>
       </div>
       <div class="pcard" data-pid="p1">
         <div class="img-wrap"><span class="badge badge-left badge-sale">FLASH SALE</span><img src="assets-v2/p1.jpg" alt="Moonlime Tenjifer" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Klasik</div><div class="name">Moonlime Tenjifer 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="name">Moonlime Tenjifer 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div></div>
       </div>
       <div class="pcard" data-pid="p4">
         <div class="img-wrap"><span class="badge badge-left badge-out">HABIS</span><img src="assets-v2/p4.jpg" alt="Sun of Peach" style="filter:grayscale(.5)" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="name">Sun of Peach 150gr</div><div class="price-row"><span class="price" style="color:rgba(255,255,255,.4)">Rp 79.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="name">Sun of Peach 150gr</div><div class="price-row"><span class="price" style="color:rgba(255,255,255,.4)">Rp 79.000</span></div></div>
       </div>
     </div>
   </div>
@@ -1964,59 +1998,60 @@ html.locked,body.locked{overflow:hidden;}
     </div>
     <div class="filter-tabs">
       <button class="filter-tab active" data-tab="Semua">Semua</button>
-      <button class="filter-tab" data-tab="infused">Kopi Infused</button>
-      <button class="filter-tab" data-tab="klasik">Kopi Klasik</button>
-      <button class="filter-tab" data-tab="drip">Drip Bag</button>
+      <button class="filter-tab" data-tab="specialty-filter">Specialty Filter</button>
+      <button class="filter-tab" data-tab="specialty-espresso">Specialty Espresso</button>
+      <button class="filter-tab" data-tab="commodity-blend">Commodity Blend</button>
+      <button class="filter-tab" data-tab="kopi-tanpa-ampas">Kopi Tanpa Ampas</button>
     </div>
     <p class="produk-count" id="produkCount" role="status" aria-live="polite"></p>
     <div class="product-grid" id="allProductsGrid">
-      <div class="pcard" id="cat-pcard-0" data-cat="klasik" data-pid="p1">
+      <div class="pcard" id="cat-pcard-0" data-cat="specialty-filter" data-pid="p1">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p1.jpg" alt="Moonlime Tenjifer" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Klasik</div><div class="roast-tag">🔥 Medium Roast · Kintamani, Bali</div><div class="name">Moonlime Tenjifer — Arabika Kintamani 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Medium Roast · Kintamani, Bali</div><div class="name">Moonlime Tenjifer — Arabika Kintamani 200gr</div><div class="price-row"><span class="price">Rp 92.000</span><span class="old-price">Rp 115.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-1" data-cat="infused" data-pid="p2">
+      <div class="pcard" id="cat-pcard-1" data-cat="specialty-filter" data-pid="p2">
         <div class="img-wrap"><span class="badge badge-left badge-lowstock">Sisa 4</span><img src="assets-v2/p2.jpg" alt="Alexander Le Grape" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="roast-tag">🔥 Medium Roast · Argopuro, Jawa</div><div class="name">Alexander Le Grape — Arabika Argopuro 200gr</div><div class="price-row"><span class="price">Rp 98.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Medium Roast · Argopuro, Jawa</div><div class="name">Alexander Le Grape — Arabika Argopuro 200gr</div><div class="price-row"><span class="price">Rp 98.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-2" data-cat="infused" data-pid="p3">
+      <div class="pcard" id="cat-pcard-2" data-cat="specialty-filter" data-pid="p3">
         <div class="img-wrap"><span class="badge badge-left badge-off">-20%</span><img src="assets-v2/p3.jpg" alt="Blueberry Wellcream" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="roast-tag">🔥 Light Roast · Kerinci, Sumatra</div><div class="name">Blueberry Wellcream — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Light Roast · Kerinci, Sumatra</div><div class="name">Blueberry Wellcream — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 95.000</span><span class="old-price">Rp 118.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-3" data-cat="infused" data-pid="p4">
+      <div class="pcard" id="cat-pcard-3" data-cat="specialty-filter" data-pid="p4">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p4.jpg" alt="Sun of Peach" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Sun of Peach — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 79.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Sun of Peach — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 79.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-4" data-cat="infused" data-pid="p5">
+      <div class="pcard" id="cat-pcard-4" data-cat="specialty-espresso" data-pid="p5">
         <div class="img-wrap"><span class="badge badge-left badge-lowstock">Sisa 8</span><img src="assets-v2/p5.jpg" alt="Milkinho Da Cerra" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="roast-tag">🔥 Dark Roast · Brazil</div><div class="name">Milkinho Da Cerra — Arabika Brazil 200gr</div><div class="price-row"><span class="price">Rp 89.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Espresso</div><div class="roast-tag">🔥 Dark Roast · Brazil</div><div class="name">Milkinho Da Cerra — Arabika Brazil 200gr</div><div class="price-row"><span class="price">Rp 89.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-5" data-cat="infused" data-pid="p6">
+      <div class="pcard" id="cat-pcard-5" data-cat="specialty-espresso" data-pid="p6">
         <div class="img-wrap"><span class="badge badge-left badge-off">-15%</span><img src="assets-v2/p6.jpg" alt="Bleubailess Chocotart" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="roast-tag">🔥 Medium Roast · Kerinci, Sumatra</div><div class="name">Bleubailess Chocotart — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Espresso</div><div class="roast-tag">🔥 Medium Roast · Kerinci, Sumatra</div><div class="name">Bleubailess Chocotart — Arabika Kerinci 200gr</div><div class="price-row"><span class="price">Rp 91.000</span><span class="old-price">Rp 107.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-6" data-cat="klasik" data-pid="p7">
+      <div class="pcard" id="cat-pcard-6" data-cat="commodity-blend" data-pid="p7">
         <div class="img-wrap"><img src="assets-v2/p7.jpg" alt="75% Arabica 25% Robusta" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Klasik</div><div class="roast-tag">🔥 Medium-Dark Roast · Blend Nusantara</div><div class="name">75% Arabica 25% Robusta 200gr</div><div class="price-row"><span class="price">Rp 58.000</span><span class="old-price">Rp 68.000</span></div></div>
+        <div class="body"><div class="cat-tag">Commodity Blend</div><div class="roast-tag">🔥 Medium-Dark Roast · Blend Nusantara</div><div class="name">75% Arabica 25% Robusta 200gr</div><div class="price-row"><span class="price">Rp 58.000</span><span class="old-price">Rp 68.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-7" data-cat="klasik" data-pid="p8">
+      <div class="pcard" id="cat-pcard-7" data-cat="commodity-blend" data-pid="p8">
         <div class="img-wrap"><img src="assets-v2/p8.jpg" alt="50% Arabica 50% Robusta" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Klasik</div><div class="roast-tag">🔥 Dark Roast · Blend Nusantara</div><div class="name">50% Arabica 50% Robusta 200gr</div><div class="price-row"><span class="price">Rp 52.000</span></div></div>
+        <div class="body"><div class="cat-tag">Commodity Blend</div><div class="roast-tag">🔥 Dark Roast · Blend Nusantara</div><div class="name">50% Arabica 50% Robusta 200gr</div><div class="price-row"><span class="price">Rp 52.000</span></div></div>
       </div>
-      <div class="pcard" id="cat-pcard-8" data-cat="drip" data-pid="p9">
+      <div class="pcard" id="cat-pcard-8" data-cat="kopi-tanpa-ampas" data-pid="p9">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p9.jpg" alt="Weekly Coffee Drip Fruit Basket" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Drip Bag</div><div class="roast-tag">🔥 Light Roast · Multi-Origin</div><div class="name">Weekly Coffee Drip — Fruit Basket (isi 7)</div><div class="price-row"><span class="price">Rp 65.000</span></div></div>
+        <div class="body"><div class="cat-tag">Kopi Tanpa Ampas</div><div class="roast-tag">🔥 Light Roast · Multi-Origin</div><div class="name">Weekly Coffee Drip — Fruit Basket (isi 7)</div><div class="price-row"><span class="price">Rp 65.000</span></div></div>
       </div>
-      <div class="pcard" data-cat="infused" data-pid="p10">
+      <div class="pcard" data-cat="specialty-filter" data-pid="p10">
         <div class="img-wrap"><img src="assets-v2/p10.jpg" alt="Victoria La Marqueesa" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Victoria La Marqueesa — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 82.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Light Roast · Karo, Sumatra</div><div class="name">Victoria La Marqueesa — Arabika Karo 150gr</div><div class="price-row"><span class="price">Rp 82.000</span></div></div>
       </div>
-      <div class="pcard" data-cat="infused" data-pid="p11">
+      <div class="pcard" data-cat="specialty-filter" data-pid="p11">
         <div class="img-wrap"><span class="badge badge-left badge-new">BARU</span><img src="assets-v2/p11.jpg" alt="Honey Berry Sweety" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Kopi Infused</div><div class="roast-tag">🔥 Medium Roast · Gayo &amp; Kerinci</div><div class="name">Honey Berry Sweety — Gayo Honey 200gr</div><div class="price-row"><span class="price">Rp 96.000</span></div></div>
+        <div class="body"><div class="cat-tag">Specialty Filter</div><div class="roast-tag">🔥 Medium Roast · Gayo &amp; Kerinci</div><div class="name">Honey Berry Sweety — Gayo Honey 200gr</div><div class="price-row"><span class="price">Rp 96.000</span></div></div>
       </div>
-      <div class="pcard" data-cat="drip" data-pid="p12">
+      <div class="pcard" data-cat="kopi-tanpa-ampas" data-pid="p12">
         <div class="img-wrap"><img src="assets-v2/p12.jpg" alt="Coffee Drip Bundling Package" decoding="async" loading="lazy" width="300" height="300"></div>
-        <div class="body"><div class="cat-tag">Drip Bag</div><div class="roast-tag">🔥 Light Roast · Kintamani, Bali</div><div class="name">Coffee Drip Bundling — Kintamani (isi 5)</div><div class="price-row"><span class="price">Rp 58.000</span></div></div>
+        <div class="body"><div class="cat-tag">Kopi Tanpa Ampas</div><div class="roast-tag">🔥 Light Roast · Kintamani, Bali</div><div class="name">Coffee Drip Bundling — Kintamani (isi 5)</div><div class="price-row"><span class="price">Rp 58.000</span></div></div>
       </div>
     </div>
     <div class="load-more-wrap"><button class="btn btn-ghost" type="button" onclick="muatLebihBanyak()">Muat Lebih Banyak</button></div>
@@ -2172,9 +2207,10 @@ html.locked,body.locked{overflow:hidden;}
       <div class="footer-col">
         <button type="button" class="footer-acc-head" aria-expanded="false" aria-controls="footerListBelanja"><span>Belanja</span><span class="footer-acc-plus">+</span></button>
         <div class="footer-acc-panel" id="footerListBelanja"><ul>
-          <li><a href="#/katalog?kategori=infused">Kopi Infused</a></li>
-          <li><a href="#/katalog?kategori=klasik">Kopi Klasik</a></li>
-          <li><a href="#/katalog?kategori=drip">Drip Bag</a></li>
+          <li><a href="#/katalog?kategori=specialty-filter">Specialty Filter</a></li>
+          <li><a href="#/katalog?kategori=specialty-espresso">Specialty Espresso</a></li>
+          <li><a href="#/katalog?kategori=commodity-blend">Commodity Blend</a></li>
+          <li><a href="#/katalog?kategori=kopi-tanpa-ampas">Kopi Tanpa Ampas</a></li>
           <li><a href="#/katalog?sort=terlaris">Terlaris</a></li>
           <li><a href="#/katalog?promo=diskon">Promo</a></li>
         </ul></div>
@@ -2512,15 +2548,15 @@ const searchPanel=document.getElementById('searchPanel');
 const searchDefault=document.getElementById('searchDefault');
 const searchResults=document.getElementById('searchResults');
 const CATALOG=[
-  {n:'Moonlime Tenjifer — Arabika Kintamani',c:'Kopi Klasik',pcardId:'cat-pcard-0',popular:true},
-  {n:'Alexander Le Grape — Arabika Argopuro',c:'Kopi Infused',pcardId:'cat-pcard-1'},
-  {n:'Blueberry Wellcream — Arabika Kerinci',c:'Kopi Infused',pcardId:'cat-pcard-2',popular:true},
-  {n:'Sun of Peach — Arabika Karo',c:'Kopi Infused',pcardId:'cat-pcard-3'},
-  {n:'Milkinho Da Cerra — Arabika Brazil',c:'Kopi Infused',pcardId:'cat-pcard-4',popular:true},
-  {n:'Bleubailess Chocotart — Arabika Kerinci',c:'Kopi Infused',pcardId:'cat-pcard-5'},
-  {n:'75% Arabica 25% Robusta',c:'Kopi Klasik',pcardId:'cat-pcard-6',popular:true},
-  {n:'50% Arabica 50% Robusta',c:'Kopi Klasik',pcardId:'cat-pcard-7'},
-  {n:'Weekly Coffee Drip Fruit Basket',c:'Drip Bag',pcardId:'cat-pcard-8',popular:true},
+  {n:'Moonlime Tenjifer — Arabika Kintamani',c:'Specialty Filter',pcardId:'cat-pcard-0',popular:true},
+  {n:'Alexander Le Grape — Arabika Argopuro',c:'Specialty Filter',pcardId:'cat-pcard-1'},
+  {n:'Blueberry Wellcream — Arabika Kerinci',c:'Specialty Filter',pcardId:'cat-pcard-2',popular:true},
+  {n:'Sun of Peach — Arabika Karo',c:'Specialty Filter',pcardId:'cat-pcard-3'},
+  {n:'Milkinho Da Cerra — Arabika Brazil',c:'Specialty Espresso',pcardId:'cat-pcard-4',popular:true},
+  {n:'Bleubailess Chocotart — Arabika Kerinci',c:'Specialty Espresso',pcardId:'cat-pcard-5'},
+  {n:'75% Arabica 25% Robusta',c:'Commodity Blend',pcardId:'cat-pcard-6',popular:true},
+  {n:'50% Arabica 50% Robusta',c:'Commodity Blend',pcardId:'cat-pcard-7'},
+  {n:'Weekly Coffee Drip Fruit Basket',c:'Kopi Tanpa Ampas',pcardId:'cat-pcard-8',popular:true},
 ];
 // Reuse thumbnail gambar produk yang sudah ter-embed di grid #semua-produk (bukan gambar baru)
 CATALOG.forEach(p=>{
@@ -3006,30 +3042,33 @@ function P(o){
 }
 
 var PRODUCTS = [
-  P({id:'p1', name:'Moonlime Tenjifer', cat:'klasik', catLabel:'Kopi Klasik', price:92000, oldPrice:115000, img:'p1', added:'2026-04-15', badge:'sale', origin:'Arabika Kintamani, Bali', process:'Washed', roastLevel:2, cupping:{aroma:4,asam:5,body:2,manis:3,akhir:3}, notes:['Jeruk Nipis','Teh Hitam','Segar'], desc:'Jeruk nipis tipis di atas badan teh hitam — specialty paling segar di rak kami. Juara untuk es kopi tanpa gula.', brew:'Japanese iced: seduh 1:12 langsung ke es. Giling sedang.', stock:14, sold:98, rating:4.6, reviews:19}),
-  P({id:'p2', name:'Alexander Le Grape', cat:'infused', catLabel:'Kopi Infused', price:98000, oldPrice:null, img:'p2', added:'2026-09-02', badge:'new', origin:'Arabika Argopuro, Jawa Timur', process:'Natural + infus anggur', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:4,akhir:3}, notes:['Anggur','Manis Asam','Floral'], desc:'Anggur segar menyambut duluan, ditutup floral tipis. Specialty untuk yang bosan rasa itu-itu saja.', brew:'Seduh manual giling sedang, air 90–92°C supaya aromanya tidak kabur.', stock:18, sold:96, rating:4.8, reviews:22}),
-  P({id:'p3', name:'Blueberry Wellcream', cat:'infused', catLabel:'Kopi Infused', price:95000, oldPrice:118000, img:'p3', added:'2026-04-29', badge:'sale', origin:'Arabika Kerinci, Jambi', process:'Natural + infus blueberry', roastLevel:2, cupping:{aroma:4,asam:3,body:3,manis:5,akhir:3}, notes:['Blueberry','Krim','Manis'], desc:'Blueberry lembut dengan tekstur creamy — specialty paling ramah untuk pemula.', brew:'V60 atau kopi susu; giling sedang, air 91°C.', stock:24, sold:171, rating:4.8, reviews:40}),
-  P({id:'p4', name:'Sun of Peach', cat:'infused', catLabel:'Kopi Infused', price:79000, oldPrice:null, img:'p4', added:'2026-05-13', badge:null, weight:150, origin:'Arabika Karo, Sumatra Utara', process:'Giling basah + infus peach', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:5,akhir:4}, notes:['Peach','Brown Sugar','Rempah'], desc:'Peach yang manis, ditutup rempah tipis. Diinfus perlahan supaya buahnya menempel sampai tegukan terakhir.', brew:'V60 giling sedang, air 90°C, rasio 1:16 — biarkan buahnya bicara.', stock:9, sold:187, rating:4.9, reviews:36}),
-  P({id:'p5', name:'Milkinho Da Cerra', cat:'infused', catLabel:'Kopi Infused', price:89000, oldPrice:null, img:'p5', added:'2026-05-27', badge:null, origin:'Arabika Brazil', process:'Washed + infus susu karamel', roastLevel:4, cupping:{aroma:3,asam:2,body:5,manis:4,akhir:4}, notes:['Susu','Karamel','Kacang'], desc:'Dibangun khusus untuk kopi susu: karamel dan kacang yang menebal saat ketemu susu segar.', brew:'Giling halus, seduh pekat 1:10, campur susu dingin 1:1.', stock:23, sold:156, rating:4.8, reviews:35}),
-  P({id:'p6', name:'Bleubailess Chocotart', cat:'infused', catLabel:'Kopi Infused', price:91000, oldPrice:107000, img:'p6', added:'2026-06-10', badge:'sale', origin:'Arabika Kerinci, Jambi', process:'Natural + infus cokelat blueberry', roastLevel:3, cupping:{aroma:4,asam:3,body:4,manis:5,akhir:3}, notes:['Blueberry','Cokelat','Pastry'], desc:'Seperti tart cokelat isi blueberry yang berubah jadi kopi. Manisnya dari buah, bukan tambahan gula.', brew:'Enak dingin: seduh kental lalu tuang ke es. Giling sedang.', stock:21, sold:142, rating:4.7, reviews:31}),
-  P({id:'p7', name:'75% Arabica 25% Robusta', cat:'klasik', catLabel:'Kopi Klasik', price:58000, oldPrice:68000, img:'p7', added:'2026-06-24', badge:'sale', origin:'Blend Nusantara', process:'Semi-washed', roastLevel:3, cupping:{aroma:4,asam:3,body:4,manis:3,akhir:3}, notes:['Karamel','Rempah'], desc:'Komposisi favorit pelanggan: aroma Gayo di depan, tenaga Robusta di belakang. Seimbang untuk hitam maupun susu.', brew:'Paling enak di V60 giling sedang, air 93°C, rasio 1:15.', stock:27, sold:376, rating:4.7, reviews:71}),
-  P({id:'p8', name:'50% Arabica 50% Robusta', cat:'klasik', catLabel:'Kopi Klasik', price:52000, oldPrice:null, img:'p8', added:'2026-07-08', badge:null, origin:'Blend Nusantara', process:'Semi-washed', roastLevel:4, cupping:{aroma:3,asam:2,body:5,manis:3,akhir:4}, notes:['Cokelat Gelap','Kacang'], desc:'Separuh arabika yang wangi, separuh robusta yang tegas. Badan tebal, cocok untuk kopi susu rumahan yang nendang.', brew:'Giling halus untuk mokapot atau espresso rumahan; giling sedang untuk tubruk pekat.', stock:41, sold:530, rating:4.6, reviews:104}),
-  P({id:'p9', name:'Weekly Coffee Drip — Fruit Basket', cat:'drip', catLabel:'Drip Bag', price:65000, oldPrice:null, img:'p9', added:'2026-07-22', badge:null, weight:70, grinds:null, origin:'Mixed Origin', process:'Natural', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:4,akhir:3}, notes:['Buah Tropis','Manis','Floral'], desc:'Tujuh kantong drip, tujuh karakter buah — keranjang buah yang bisa diseduh di meja kerja.', brew:'Sobek, kaitkan ke cangkir, tuang air 90°C perlahan sampai 150ml.', stock:12, sold:74, rating:4.8, reviews:17}),
-  P({id:'p10', name:'Victoria La Marqueesa', cat:'infused', catLabel:'Kopi Infused', price:82000, oldPrice:null, img:'p10', added:'2026-08-06', badge:null, weight:150, origin:'Arabika Karo, Sumatra Utara', process:'Natural + infus signature', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:4,akhir:5}, notes:['Stroberi','Vanila','Wine'], desc:'Stroberi dan vanila bergantian muncul, ujungnya seperti wine yang halus. Edisi kecil, disangrai per batch.', brew:'Manual brew giling sedang-kasar, air 90°C. Jangan diburu-buru.', stock:7, sold:64, rating:4.9, reviews:15}),
-  P({id:'p11', name:'Honey Berry Sweety', cat:'infused', catLabel:'Kopi Infused', price:96000, oldPrice:null, img:'p11', added:'2026-09-10', badge:'new', origin:'Arabika Gayo, Aceh', process:'Honey + infus beri', roastLevel:2, cupping:{aroma:4,asam:3,body:3,manis:5,akhir:4}, notes:['Madu','Beri Merah','Manis'], desc:'Proses honey ketemu beri merah: manisnya pelan, asamnya sopan. Kopi sore yang menyenangkan.', brew:'Manual brew giling sedang, air 90–92°C.', stock:16, sold:109, rating:4.7, reviews:24}),
-  P({id:'p12', name:'Coffee Drip Bundling — Kintamani', cat:'drip', catLabel:'Drip Bag', price:58000, oldPrice:null, img:'p12', added:'2026-08-20', badge:null, weight:50, grinds:null, origin:'Arabika Kintamani, Bali', process:'Washed', roastLevel:3, cupping:{aroma:3,asam:3,body:3,manis:4,akhir:3}, notes:['Karamel','Cokelat'], desc:'Lima kantong Kintamani siap seduh — kopi proper di kantor, kereta, atau gunung. Tanpa alat, tanpa drama.', brew:'Kaitkan ke cangkir, tuang air panas 150ml dalam 3 tuangan.', stock:29, sold:203, rating:4.7, reviews:45}),
+  P({id:'p1', name:'Moonlime Tenjifer', cat:'specialty-filter', catLabel:'Specialty Filter', price:92000, oldPrice:115000, img:'p1', added:'2026-04-15', badge:'sale', origin:'Arabika Kintamani, Bali', process:'Washed', roastLevel:2, cupping:{aroma:4,asam:5,body:2,manis:3,akhir:3}, notes:['Jeruk Nipis','Teh Hitam','Segar'], desc:'Jeruk nipis tipis di atas badan teh hitam — specialty paling segar di rak kami. Juara untuk es kopi tanpa gula.', brew:'Japanese iced: seduh 1:12 langsung ke es. Giling sedang.', stock:14, sold:98, rating:4.6, reviews:19}),
+  P({id:'p2', name:'Alexander Le Grape', cat:'specialty-filter', catLabel:'Specialty Filter', price:98000, oldPrice:null, img:'p2', added:'2026-09-02', badge:'new', origin:'Arabika Argopuro, Jawa Timur', process:'Natural + infus anggur', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:4,akhir:3}, notes:['Anggur','Manis Asam','Floral'], desc:'Anggur segar menyambut duluan, ditutup floral tipis. Specialty untuk yang bosan rasa itu-itu saja.', brew:'Seduh manual giling sedang, air 90–92°C supaya aromanya tidak kabur.', stock:18, sold:96, rating:4.8, reviews:22}),
+  P({id:'p3', name:'Blueberry Wellcream', cat:'specialty-filter', catLabel:'Specialty Filter', price:95000, oldPrice:118000, img:'p3', added:'2026-04-29', badge:'sale', origin:'Arabika Kerinci, Jambi', process:'Natural + infus blueberry', roastLevel:2, cupping:{aroma:4,asam:3,body:3,manis:5,akhir:3}, notes:['Blueberry','Krim','Manis'], desc:'Blueberry lembut dengan tekstur creamy — specialty paling ramah untuk pemula.', brew:'V60 atau kopi susu; giling sedang, air 91°C.', stock:24, sold:171, rating:4.8, reviews:40}),
+  P({id:'p4', name:'Sun of Peach', cat:'specialty-filter', catLabel:'Specialty Filter', price:79000, oldPrice:null, img:'p4', added:'2026-05-13', badge:null, weight:150, origin:'Arabika Karo, Sumatra Utara', process:'Giling basah + infus peach', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:5,akhir:4}, notes:['Peach','Brown Sugar','Rempah'], desc:'Peach yang manis, ditutup rempah tipis. Diinfus perlahan supaya buahnya menempel sampai tegukan terakhir.', brew:'V60 giling sedang, air 90°C, rasio 1:16 — biarkan buahnya bicara.', stock:9, sold:187, rating:4.9, reviews:36}),
+  P({id:'p5', name:'Milkinho Da Cerra', cat:'specialty-espresso', catLabel:'Specialty Espresso', price:89000, oldPrice:null, img:'p5', added:'2026-05-27', badge:null, origin:'Arabika Brazil', process:'Washed + infus susu karamel', roastLevel:4, cupping:{aroma:3,asam:2,body:5,manis:4,akhir:4}, notes:['Susu','Karamel','Kacang'], desc:'Dibangun khusus untuk kopi susu: karamel dan kacang yang menebal saat ketemu susu segar.', brew:'Giling halus, seduh pekat 1:10, campur susu dingin 1:1.', stock:23, sold:156, rating:4.8, reviews:35}),
+  P({id:'p6', name:'Bleubailess Chocotart', cat:'specialty-espresso', catLabel:'Specialty Espresso', price:91000, oldPrice:107000, img:'p6', added:'2026-06-10', badge:'sale', origin:'Arabika Kerinci, Jambi', process:'Natural + infus cokelat blueberry', roastLevel:3, cupping:{aroma:4,asam:3,body:4,manis:5,akhir:3}, notes:['Blueberry','Cokelat','Pastry'], desc:'Seperti tart cokelat isi blueberry yang berubah jadi kopi. Manisnya dari buah, bukan tambahan gula.', brew:'Enak dingin: seduh kental lalu tuang ke es. Giling sedang.', stock:21, sold:142, rating:4.7, reviews:31}),
+  P({id:'p7', name:'75% Arabica 25% Robusta', cat:'commodity-blend', catLabel:'Commodity Blend', price:58000, oldPrice:68000, img:'p7', added:'2026-06-24', badge:'sale', origin:'Blend Nusantara', process:'Semi-washed', roastLevel:3, cupping:{aroma:4,asam:3,body:4,manis:3,akhir:3}, notes:['Karamel','Rempah'], desc:'Komposisi favorit pelanggan: aroma Gayo di depan, tenaga Robusta di belakang. Seimbang untuk hitam maupun susu.', brew:'Paling enak di V60 giling sedang, air 93°C, rasio 1:15.', stock:27, sold:376, rating:4.7, reviews:71}),
+  P({id:'p8', name:'50% Arabica 50% Robusta', cat:'commodity-blend', catLabel:'Commodity Blend', price:52000, oldPrice:null, img:'p8', added:'2026-07-08', badge:null, origin:'Blend Nusantara', process:'Semi-washed', roastLevel:4, cupping:{aroma:3,asam:2,body:5,manis:3,akhir:4}, notes:['Cokelat Gelap','Kacang'], desc:'Separuh arabika yang wangi, separuh robusta yang tegas. Badan tebal, cocok untuk kopi susu rumahan yang nendang.', brew:'Giling halus untuk mokapot atau espresso rumahan; giling sedang untuk tubruk pekat.', stock:41, sold:530, rating:4.6, reviews:104}),
+  P({id:'p9', name:'Weekly Coffee Drip — Fruit Basket', cat:'kopi-tanpa-ampas', catLabel:'Kopi Tanpa Ampas', price:65000, oldPrice:null, img:'p9', added:'2026-07-22', badge:null, weight:70, grinds:null, origin:'Mixed Origin', process:'Natural', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:4,akhir:3}, notes:['Buah Tropis','Manis','Floral'], desc:'Tujuh kantong drip, tujuh karakter buah — keranjang buah yang bisa diseduh di meja kerja.', brew:'Sobek, kaitkan ke cangkir, tuang air 90°C perlahan sampai 150ml.', stock:12, sold:74, rating:4.8, reviews:17}),
+  P({id:'p10', name:'Victoria La Marqueesa', cat:'specialty-filter', catLabel:'Specialty Filter', price:82000, oldPrice:null, img:'p10', added:'2026-08-06', badge:null, weight:150, origin:'Arabika Karo, Sumatra Utara', process:'Natural + infus signature', roastLevel:2, cupping:{aroma:5,asam:4,body:3,manis:4,akhir:5}, notes:['Stroberi','Vanila','Wine'], desc:'Stroberi dan vanila bergantian muncul, ujungnya seperti wine yang halus. Edisi kecil, disangrai per batch.', brew:'Manual brew giling sedang-kasar, air 90°C. Jangan diburu-buru.', stock:7, sold:64, rating:4.9, reviews:15}),
+  P({id:'p11', name:'Honey Berry Sweety', cat:'specialty-filter', catLabel:'Specialty Filter', price:96000, oldPrice:null, img:'p11', added:'2026-09-10', badge:'new', origin:'Arabika Gayo, Aceh', process:'Honey + infus beri', roastLevel:2, cupping:{aroma:4,asam:3,body:3,manis:5,akhir:4}, notes:['Madu','Beri Merah','Manis'], desc:'Proses honey ketemu beri merah: manisnya pelan, asamnya sopan. Kopi sore yang menyenangkan.', brew:'Manual brew giling sedang, air 90–92°C.', stock:16, sold:109, rating:4.7, reviews:24}),
+  P({id:'p12', name:'Coffee Drip Bundling — Kintamani', cat:'kopi-tanpa-ampas', catLabel:'Kopi Tanpa Ampas', price:58000, oldPrice:null, img:'p12', added:'2026-08-20', badge:null, weight:50, grinds:null, origin:'Arabika Kintamani, Bali', process:'Washed', roastLevel:3, cupping:{aroma:3,asam:3,body:3,manis:4,akhir:3}, notes:['Karamel','Cokelat'], desc:'Lima kantong Kintamani siap seduh — kopi proper di kantor, kereta, atau gunung. Tanpa alat, tanpa drama.', brew:'Kaitkan ke cangkir, tuang air panas 150ml dalam 3 tuangan.', stock:29, sold:203, rating:4.7, reviews:45}),
 ];
 function prod(id){ for(var i=0;i<PRODUCTS.length;i++) if(PRODUCTS[i].id===id) return PRODUCTS[i]; return null; }
-// Kategori = JENIS produk, tidak tumpang tindih (tiap produk tepat satu).
-// Atribut (asal, proses, sangrai, rasa) jadi filter; varian (gilingan) di PDP.
-// 'Alat Seduh' sengaja belum ada — ditambahkan begitu produknya tersedia.
+// Kategori mengikuti toko resmi sakhacoffee.com (slug WooCommerce yang sama).
+// Tiap produk tepat satu kategori: drip bag seluruhnya masuk Kopi Tanpa Ampas
+// (di situs resmi Fruit Basket ikut Specialty Filter). "New Release" bukan
+// kategori — ditangani filter Promo › Baru. Alat Seduh belum ada produknya.
 var KATEGORI = [
-  {id:'infused', label:'Kopi Infused', judul:'Kopi <em>Infused</em>',
-   sub:'Arabika pilihan yang diinfus buah & rempah — ciri khas Sakha.'},
-  {id:'klasik',  label:'Kopi Klasik',  judul:'Kopi <em>Klasik</em>',
-   sub:'Single origin & blend tanpa infus, untuk seduh manual maupun kopi susu harian.'},
-  {id:'drip',    label:'Drip Bag',     judul:'Drip <em>Bag</em>',
-   sub:'Kantong seduh praktis — cukup air panas, tanpa alat.'}
+  {id:'specialty-filter',   label:'Specialty Filter',   judul:'Specialty <em>Filter</em>',
+   sub:'Arabika specialty untuk seduh manual — V60, pour-over, sampai Japanese iced.'},
+  {id:'specialty-espresso', label:'Specialty Espresso', judul:'Specialty <em>Espresso</em>',
+   sub:'Racikan arabika untuk espresso & kopi susu — badan tebal, manis karamel.'},
+  {id:'commodity-blend',    label:'Commodity Blend',    judul:'Commodity <em>Blend</em>',
+   sub:'Blend arabika–robusta harian yang ekonomis, cocok untuk tubruk & kopi susu rumahan.'},
+  {id:'kopi-tanpa-ampas',   label:'Kopi Tanpa Ampas',   judul:'Kopi <em>Tanpa Ampas</em>',
+   sub:'Drip bag siap seduh — cukup air panas, tanpa alat, tanpa ampas.'}
 ];
 var CATS_ALL = ['Semua'].concat(KATEGORI.map(function(k){ return k.id; }));
 function kategoriMeta(id){
@@ -3039,15 +3078,15 @@ function kategoriMeta(id){
 function katLabel(id){ var k = kategoriMeta(id); return k ? k.label : id; }
 
 var ARTICLES = [
-  {id:'a1', tag:'Brewing Guide', title:'Cara Menyeduh Kopi V60 untuk Pemula', excerpt:'Empat langkah sederhana menyeduh manual brew pakai V60 di rumah — dari rasio air, suhu, sampai teknik tuang melingkar yang bikin rasa lebih seimbang.', body:'Manual brew V60 kelihatan rumit, padahal cuma butuh empat hal: rasio, suhu, giling, dan teknik tuang.\n\nMulai dari rasio 1:15 (15gr kopi untuk 225ml air), giling sedang seperti pasir kasar, air 92-94°C, lalu tuang melingkar dari tengah ke luar dalam 3 tahap. Bloom dulu 30 detik dengan sedikit air supaya gas CO2 keluar, baru lanjutkan tuangan sisanya.\n\nTotal waktu seduh idealnya 2.5-3 menit. Kalau lebih cepat, giling kurang halus. Kalau lebih lambat, coba giling sedikit lebih kasar.', img:'p1', cat:'Alat Seduh', date:'2026-08-20'},
-  {id:'a2', tag:'Coffee Knowledge', title:'Specialty vs Commodity Blend, Apa Bedanya?', excerpt:'Dari skor cupping, proses panen, sampai harga — kenali apa yang bikin kopi specialty single-origin terasa berbeda dari blend harian.', body:'Specialty coffee punya skor cupping minimal 80/100 dari penilai bersertifikat — dinilai dari aroma, rasa, aftertaste, keasaman, body, hingga kebersihan cangkir.\n\nCommodity blend diproses lebih cepat dan dicampur dari berbagai kebun untuk menjaga konsistensi harga, cocok untuk konsumsi harian. Specialty diproses hati-hati dari satu kebun (single-origin), disangrai dalam batch kecil, dan biasanya lebih mahal karena volumenya terbatas.\n\nKeduanya sama-sama halal dan aman, bedanya di kompleksitas rasa dan cerita di baliknya.', img:'p7', cat:'Specialty', date:'2026-08-12'},
+  {id:'a1', tag:'Brewing Guide', title:'Cara Menyeduh Kopi V60 untuk Pemula', excerpt:'Empat langkah sederhana menyeduh manual brew pakai V60 di rumah — dari rasio air, suhu, sampai teknik tuang melingkar yang bikin rasa lebih seimbang.', body:'Manual brew V60 kelihatan rumit, padahal cuma butuh empat hal: rasio, suhu, giling, dan teknik tuang.\n\nMulai dari rasio 1:15 (15gr kopi untuk 225ml air), giling sedang seperti pasir kasar, air 92-94°C, lalu tuang melingkar dari tengah ke luar dalam 3 tahap. Bloom dulu 30 detik dengan sedikit air supaya gas CO2 keluar, baru lanjutkan tuangan sisanya.\n\nTotal waktu seduh idealnya 2.5-3 menit. Kalau lebih cepat, giling kurang halus. Kalau lebih lambat, coba giling sedikit lebih kasar.', img:'p1', cat:'specialty-filter', date:'2026-08-20'},
+  {id:'a2', tag:'Coffee Knowledge', title:'Specialty vs Commodity Blend, Apa Bedanya?', excerpt:'Dari skor cupping, proses panen, sampai harga — kenali apa yang bikin kopi specialty single-origin terasa berbeda dari blend harian.', body:'Specialty coffee punya skor cupping minimal 80/100 dari penilai bersertifikat — dinilai dari aroma, rasa, aftertaste, keasaman, body, hingga kebersihan cangkir.\n\nCommodity blend diproses lebih cepat dan dicampur dari berbagai kebun untuk menjaga konsistensi harga, cocok untuk konsumsi harian. Specialty diproses hati-hati dari satu kebun (single-origin), disangrai dalam batch kecil, dan biasanya lebih mahal karena volumenya terbatas.\n\nKeduanya sama-sama halal dan aman, bedanya di kompleksitas rasa dan cerita di baliknya.', img:'p7', cat:'commodity-blend', date:'2026-08-12'},
   {id:'a3', tag:'Cerita Kami', title:'Dari Kebun ke Cangkir: Perjalanan Sakha', excerpt:'Sejak 2019, Sakha bekerja langsung dengan petani lokal di Gayo, Kintamani, hingga Kerinci — begini cerita di balik setiap sangraian kami.', body:'Sakha Coffee Roastery lahir dari kecintaan pada kopi Nusantara. Kami mulai dengan satu mesin roasting kecil di Jakarta tahun 2019, bekerja langsung dengan petani mitra di Gayo, Kintamani, Kerinci, dan Argopuro.\n\nTanpa tengkulak — harga yang kamu bayar berhenti di petani dan meja sangrai kami. Setiap batch disangrai dalam jumlah kecil setiap minggu, supaya kopi yang sampai ke tanganmu selalu segar.\n\nHari ini Sakha sudah mengirim ke 12+ kota di Indonesia, tapi filosofinya tetap sama: kopi jujur, dari kebun yang kami kenal namanya.', img:'kafehero', cat:'Semua', date:'2026-07-28'},
-  {id:'a4', tag:'Panduan', title:'Giling Kasar vs Halus: Pilih Sesuai Alat Seduhmu', excerpt:'Ukuran gilingan menentukan rasa akhir secangkir kopi. Panduan singkat memilih giling yang tepat.', body:'French press butuh giling kasar (seperti garam kasar) supaya tidak lolos ke saringan logam. Espresso butuh giling sangat halus (seperti tepung) supaya tekanan air bisa menahan cukup lama.\n\nV60 dan pour-over di tengah-tengah: sedang, seperti pasir pantai. Kalau kopimu terasa pahit dan gosong, biasanya giling terlalu halus untuk metode itu. Kalau terasa asam dan encer, giling terlalu kasar.', img:'p8', cat:'Alat Seduh', date:'2026-08-05'},
-  {id:'a5', tag:'Coffee Knowledge', title:'Kenapa Rasa Kopi Berubah Setelah 2 Minggu?', excerpt:'Biji kopi mulai kehilangan aroma begitu wadah dibuka. Ini cara menyimpannya supaya tetap segar lebih lama.', body:'Kopi yang sudah disangrai terus melepas CO2 dan menyerap oksigen dari udara — proses ini yang perlahan menghilangkan aroma dan rasa segarnya, biasanya terasa jelas setelah 2 minggu sejak kemasan dibuka.\n\nSimpan di wadah kedap udara, jauh dari cahaya matahari langsung dan sumber panas. Jangan simpan di kulkas — kelembapan bisa merusak biji. Beli secukupnya untuk 2-3 minggu pemakaian supaya selalu dapat yang segar.', img:'p3', cat:'Specialty', date:'2026-07-15'},
-  {id:'a6', tag:'Panduan', title:'Rasio Emas 1:15 — Titik Mulai yang Aman', excerpt:'Berapa gram kopi untuk berapa mililiter air? Mulai dari 1:15, lalu geser sesuai selera.', body:'Rasio 1:15 artinya 1 gram kopi untuk 15ml air — titik awal yang aman untuk hampir semua metode manual brew. Kalau suka lebih kuat, coba 1:13. Kalau suka lebih ringan, coba 1:17.\n\nGunakan timbangan digital, bukan sendok takar — variasi ukuran biji bikin sendok takar tidak konsisten. Setelah menemukan rasio favorit, catat supaya bisa diulang persis setiap pagi.', img:'p5', cat:'Espresso Blend', date:'2026-06-30'},
+  {id:'a4', tag:'Panduan', title:'Giling Kasar vs Halus: Pilih Sesuai Alat Seduhmu', excerpt:'Ukuran gilingan menentukan rasa akhir secangkir kopi. Panduan singkat memilih giling yang tepat.', body:'French press butuh giling kasar (seperti garam kasar) supaya tidak lolos ke saringan logam. Espresso butuh giling sangat halus (seperti tepung) supaya tekanan air bisa menahan cukup lama.\n\nV60 dan pour-over di tengah-tengah: sedang, seperti pasir pantai. Kalau kopimu terasa pahit dan gosong, biasanya giling terlalu halus untuk metode itu. Kalau terasa asam dan encer, giling terlalu kasar.', img:'p8', cat:'Semua', date:'2026-08-05'},
+  {id:'a5', tag:'Coffee Knowledge', title:'Kenapa Rasa Kopi Berubah Setelah 2 Minggu?', excerpt:'Biji kopi mulai kehilangan aroma begitu wadah dibuka. Ini cara menyimpannya supaya tetap segar lebih lama.', body:'Kopi yang sudah disangrai terus melepas CO2 dan menyerap oksigen dari udara — proses ini yang perlahan menghilangkan aroma dan rasa segarnya, biasanya terasa jelas setelah 2 minggu sejak kemasan dibuka.\n\nSimpan di wadah kedap udara, jauh dari cahaya matahari langsung dan sumber panas. Jangan simpan di kulkas — kelembapan bisa merusak biji. Beli secukupnya untuk 2-3 minggu pemakaian supaya selalu dapat yang segar.', img:'p3', cat:'specialty-filter', date:'2026-07-15'},
+  {id:'a6', tag:'Panduan', title:'Rasio Emas 1:15 — Titik Mulai yang Aman', excerpt:'Berapa gram kopi untuk berapa mililiter air? Mulai dari 1:15, lalu geser sesuai selera.', body:'Rasio 1:15 artinya 1 gram kopi untuk 15ml air — titik awal yang aman untuk hampir semua metode manual brew. Kalau suka lebih kuat, coba 1:13. Kalau suka lebih ringan, coba 1:17.\n\nGunakan timbangan digital, bukan sendok takar — variasi ukuran biji bikin sendok takar tidak konsisten. Setelah menemukan rasio favorit, catat supaya bisa diulang persis setiap pagi.', img:'p5', cat:'specialty-espresso', date:'2026-06-30'},
   {id:'a7', tag:'Cerita Kami', title:'Kenapa Kami Tidak Pakai Tengkulak', excerpt:'Harga yang kamu bayar berhenti di petani dan meja sangrai kami — begini cara kerja rantai pasoknya.', body:'Model bisnis kopi konvensional biasanya melewati 3-4 perantara sebelum sampai ke roaster: pengepul desa, pengepul kabupaten, eksportir, lalu baru roaster. Setiap tahap mengambil margin, dan petani biasanya mendapat porsi paling kecil.\n\nSakha membeli langsung dari kelompok tani mitra dengan harga yang disepakati di awal musim, di atas harga pasar. Ini bukan cuma soal etika — kopi yang diproses dengan insentif yang jelas untuk petani biasanya juga lebih konsisten kualitasnya.', img:'gal1', cat:'Semua', date:'2026-06-18'},
-  {id:'a8', tag:'Brewing Guide', title:'Cold Brew di Rumah, Tanpa Alat Mahal', excerpt:'Cold brew cukup butuh air dingin, waktu, dan kesabaran — bukan mesin khusus.', body:'Cold brew dibuat dengan merendam kopi giling kasar dalam air dingin/suhu ruang selama 12-18 jam, bukan diseduh dengan air panas. Hasilnya lebih rendah asam dan lebih manis natural.\n\nRasio 1:8 untuk konsentrat (nanti diencerkan saat disajikan). Giling kasar seperti French press, rendam dalam toples tertutup di kulkas, saring pakai kain atau filter kertas. Konsentrat tahan sampai 2 minggu di kulkas.', img:'p4', cat:'Alat Seduh', date:'2026-06-02'},
-  {id:'a9', tag:'Coffee Knowledge', title:'Membaca Tanggal Sangrai di Kemasan Sakha', excerpt:'Arti tanggal di label, masa degassing, dan kapan biji ada di puncak rasanya.', body:'Setiap kemasan Sakha mencantumkan tanggal sangrai, bukan tanggal kedaluwarsa — karena kopi tidak "basi", hanya kehilangan aroma pelan-pelan.\n\nBiji butuh 3-5 hari degassing (melepas CO2) sebelum performa terbaiknya untuk espresso, sedikit lebih cepat untuk manual brew. Puncak rasa biasanya di hari ke-5 sampai ke-21 setelah sangrai. Setelah itu masih enak diminum, hanya kompleksitas aromanya mulai menurun.', img:'p9', cat:'Commodity Blend', date:'2026-05-20'},
+  {id:'a8', tag:'Brewing Guide', title:'Cold Brew di Rumah, Tanpa Alat Mahal', excerpt:'Cold brew cukup butuh air dingin, waktu, dan kesabaran — bukan mesin khusus.', body:'Cold brew dibuat dengan merendam kopi giling kasar dalam air dingin/suhu ruang selama 12-18 jam, bukan diseduh dengan air panas. Hasilnya lebih rendah asam dan lebih manis natural.\n\nRasio 1:8 untuk konsentrat (nanti diencerkan saat disajikan). Giling kasar seperti French press, rendam dalam toples tertutup di kulkas, saring pakai kain atau filter kertas. Konsentrat tahan sampai 2 minggu di kulkas.', img:'p4', cat:'specialty-filter', date:'2026-06-02'},
+  {id:'a9', tag:'Coffee Knowledge', title:'Membaca Tanggal Sangrai di Kemasan Sakha', excerpt:'Arti tanggal di label, masa degassing, dan kapan biji ada di puncak rasanya.', body:'Setiap kemasan Sakha mencantumkan tanggal sangrai, bukan tanggal kedaluwarsa — karena kopi tidak "basi", hanya kehilangan aroma pelan-pelan.\n\nBiji butuh 3-5 hari degassing (melepas CO2) sebelum performa terbaiknya untuk espresso, sedikit lebih cepat untuk manual brew. Puncak rasa biasanya di hari ke-5 sampai ke-21 setelah sangrai. Setelah itu masih enak diminum, hanya kompleksitas aromanya mulai menurun.', img:'p9', cat:'commodity-blend', date:'2026-05-20'},
 ];
 function art(id){ for(var i=0;i<ARTICLES.length;i++) if(ARTICLES[i].id===id) return ARTICLES[i]; return null; }
 
@@ -4406,9 +4445,8 @@ function viewPesananDetail(id){
   var aksi = [];
   if(o.status==='Menunggu Pembayaran') aksi.push('<a class="btn btn-primary btn-sm" href="#/bayar/'+o.id+'">Bayar Sekarang</a>');
   if(['Menunggu Pembayaran','Diproses'].indexOf(o.status)>=0) aksi.push('<button class="btn btn-ghost btn-sm" type="button" onclick="batalPesanan(\''+o.id+'\')">Batalkan Pesanan</button>');
-  if(['Diterima','Dibatalkan'].indexOf(o.status)>=0) aksi.push('<button class="btn btn-secondary btn-sm" type="button" onclick="beliLagi(\''+o.id+'\')">Beli Lagi</button>');
-  if(o.status==='Diterima' && !o.items.every(function(it){ return sudahDiulas(o.id, it.p); })) aksi.push('<a class="btn btn-secondary btn-sm" href="#/akun/ulasan">Tulis Ulasan</a>');
-  aksi.push('<button class="btn btn-ghost btn-sm" type="button" onclick="unduhFaktur(\''+o.id+'\')">Unduh Faktur</button>');
+  // Beli Lagi / Tulis Ulasan / Unduh Faktur / Tanya via WhatsApp sengaja tidak
+  // ditampilkan di halaman detail — Beli Lagi & Unduh Faktur tetap ada di daftar Pesanan.
   if(['Diterima','Dibatalkan'].indexOf(o.status)<0) aksi.push('<button class="btn btn-ghost btn-sm" type="button" onclick="majukanStatus(\''+o.id+'\')" title="Alat demo: dorong pesanan ke status berikutnya">⏩ Majukan status (demo)</button>');
   return '<div class="pg"><div class="container" style="max-width:720px">'+
     pgHead([{href:'#/',label:'Beranda'},{href:'#/pesanan',label:'Pesanan'},{href:'#',label:o.id}], 'Lacak Pesanan', esc(o.id))+
@@ -4422,8 +4460,7 @@ function viewPesananDetail(id){
       (o.diskon ? '<div class="sum-row disc"><span>Voucher '+esc(o.voucherCode||'')+'</span><b>−'+rupiah(o.diskon)+'</b></div>' : '')+
       '<div class="sum-row"><span>Ongkir</span><b>'+(o.ongkir ? rupiah(o.ongkir) : 'GRATIS')+'</b></div>'+
       '<div class="sum-row sum-total"><span>Total</span><b>'+rupiah(orderGrandTotal(o))+'</b></div></div>'+
-    '<div class="addr-acts" style="margin-top:16px">'+aksi.join('')+'</div>'+
-    '<a class="btn btn-ghost" style="margin-top:12px" target="_blank" rel="noopener" href="'+waLink('Halo Sakha, saya mau tanya soal pesanan '+o.id+'.')+'">💬 Tanya soal pesanan ini</a>'+
+    (aksi.length ? '<div class="addr-acts" style="margin-top:16px">'+aksi.join('')+'</div>' : '')+
   '</div></div>';
 }
 
@@ -5081,8 +5118,8 @@ var B2B_ACCOUNTS = [
 ];
 var B2B_SESSION = null; // { nama, perusahaan, npwp, telepon, net30 }
 
-function b2bMoq(p){ return (p.id==='p4'||p.id==='p10') ? 1 : ((p.cat==='drip') ? 12 : 5); }
-function b2bUnit(p){ return p.cat==='drip' ? 'box' : 'kg'; }
+function b2bMoq(p){ return (p.id==='p4'||p.id==='p10') ? 1 : ((p.cat==='kopi-tanpa-ampas') ? 12 : 5); }
+function b2bUnit(p){ return p.cat==='kopi-tanpa-ampas' ? 'box' : 'kg'; }
 function b2bBaseHarga(p){ return Math.round(p.price*4/500)*500; } // perkiraan harga per kg/box dari harga eceran 200gr
 function b2bTierIndex(qty){ for(var i=0;i<B2B_LADDER.length;i++){ if(qty>=B2B_LADDER[i][0] && qty<=B2B_LADDER[i][1]) return i; } return 0; }
 function b2bTierFor(p, qty){ var i=b2bTierIndex(qty); return { harga: Math.round(b2bBaseHarga(p)*B2B_MULT[i]/100/500)*500, tier:i }; }
@@ -5355,7 +5392,7 @@ function viewB2bKatalog(q){
   else                      isi = emptyState('\uD83D\uDCE6','Tidak ada produk',
                                    'Filternya terlalu sempit \u2014 coba lepas satu, atau atur ulang semuanya.',
                                    '<button class="btn btn-secondary" type="button" onclick="katalogReset()">Atur Ulang Filter</button>');
-  var satuan = (qList(q,'kategori').indexOf('Coffee Drip') >= 0) ? 'box' : 'kg';
+  var satuan = (qList(q,'kategori').indexOf('kopi-tanpa-ampas') >= 0) ? 'box' : 'kg';
   return '<div class="pg katalog-pg">'+b2bTopbarHTML()+
     '<div class="container">'+
       pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/katalog',label:'Katalog'}], 'Grosir', 'Katalog <em>Harga Grosir</em>', 'Harga per satuan turun otomatis begitu kuantitasmu melewati ambang tier.')+
@@ -6036,7 +6073,7 @@ function t(key){ var e = LANG_LABEL[key]; return e ? (e[APP_STATE.lang]||e.id) :
 
 var PHRASES = {
   // navigasi & chrome
-  'Semua':'All', 'Kopi Infused':'Infused Coffee', 'Kopi Klasik':'Classic Coffee', 'Drip Bag':'Drip Bags',
+  'Semua':'All', 'Specialty Filter':'Specialty Filter', 'Specialty Espresso':'Specialty Espresso', 'Commodity Blend':'Commodity Blend', 'Kopi Tanpa Ampas':'Drip Bags', 'Tanpa Ampas':'Drip Bags',
   'Terlaris':'Best Sellers', 'Promo':'Deals', 'Alat Seduh':'Brewing Gear',
   'Masuk sebagai B2B':'Sign in as B2B', 'Bahasa':'Language', 'Tampilan':'Appearance', 'Keranjang':'Cart', 'Akun':'Account', 'Wishlist':'Wishlist',
   'Beranda':'Home', 'Katalog':'Catalog', 'Artikel':'Articles', 'Kontak':'Contact', 'Bantuan':'Help',
@@ -7452,6 +7489,61 @@ UJI_SUITE.push(function(){
 });
 
 
+UJI_SUITE.push(function(){
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var css = sumber.slice(sumber.indexOf('<style>'), sumber.indexOf('</style>'));
+
+  // Stylesheet ini punya BEBERAPA blok dengan syarat yang sama; mengambil
+  // yang pertama saja membuat uji bergantung pada urutan penempatan.
+  function blok(syarat){
+    var kumpul = '', dari = 0, i;
+    while((i = css.indexOf('@media ' + syarat, dari)) >= 0){
+      var j = css.indexOf('{', i), d = 0, k;
+      for(k = j; k < css.length; k++){
+        if(css[k] === '{') d++;
+        else if(css[k] === '}'){ d--; if(!d) break; }
+      }
+      kumpul += css.slice(j, k);
+      dari = k;
+    }
+    return kumpul;
+  }
+  function angka(teks, pola){
+    var m = teks.match(pola);
+    return m ? parseFloat(m[1]) : null;
+  }
+
+  var hp = blok('(max-width:767.98px)');
+  uji('NAVM blok navbar ponsel ada', hp.length > 0, true);
+
+  // Logo di tengah adalah inti keseimbangannya: hamburger terkunci kiri,
+  // aksi terkunci kanan, logo mengambil sisa ruang dan memusatkan dirinya —
+  // sehingga tetap di tengah berapa pun lebar layarnya.
+  uji('NAVM logo mengambil sisa ruang', /\.nav-logo\{[^}]*flex:\s*1/.test(hp), true);
+  uji('NAVM isi logo dipusatkan', /\.nav-logo\{[^}]*justify-content:\s*center/.test(hp), true);
+  uji('NAVM aksi tidak lagi didorong paksa ke kanan',
+      /\.nav-actions\{[^}]*margin-left:\s*0/.test(hp), true);
+
+  var gap = angka(hp, /\.nav-main\{[^}]*gap:\s*([\d.]+)px/);
+  var pad = angka(hp, /\.nav-main\{[^}]*padding:\s*[\d.]+px\s+([\d.]+)px/);
+  var ikon = angka(hp, /\.nav-icon-btn\{[^}]*width:\s*([\d.]+)px/);
+  var ham = 44;   // ditetapkan di blok ≤1024px
+
+  // Nilai yang tidak ditemukan bernilai null, dan null*3 di JavaScript adalah 0 —
+  // aritmetika di bawah akan lulus secara palsu kalau itu dibiarkan lewat.
+  uji('NAVM ketiga nilai lebar terbaca dari CSS',
+      [gap, pad, ikon].filter(function(v){ return v === null; }).length, 0);
+  uji('NAVM gap navbar dikecilkan dari 24px', gap !== null && gap <= 10, true);
+
+  // Pemeriksaan aritmetika: bagian yang lebarnya TETAP tidak boleh menghabiskan
+  // layar 360px sampai logo tidak kebagian ruang. Inilah yang dulu gagal —
+  // totalnya 420px sehingga ikon selalu terlempar ke baris berikutnya.
+  var lengkap = (gap !== null && pad !== null && ikon !== null);
+  var tetap = lengkap ? (ham + (ikon * 3) + (gap * 3) + (pad * 2)) : Infinity;
+  uji('NAVM bagian berlebar tetap muat di layar 360px', tetap <= 360, true);
+  uji('NAVM masih ada ruang layak untuk logo (>=110px)', 360 - tetap >= 110, true);
+});
+
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
 UJI_SUITE.push(function(){
   uji('T1 semua produk punya added',
@@ -7467,9 +7559,9 @@ UJI_SUITE.push(function(){
 });
 UJI_SUITE.push(function(){
   uji('T2 qList kosong', qList({}, 'kategori'), []);
-  uji('T2 qList tunggal', qList({kategori:'infused'}, 'kategori'), ['infused']);
-  uji('T2 qList ganda', qList({kategori:'infused,drip'}, 'kategori'),
-      ['infused','drip']);
+  uji('T2 qList tunggal', qList({kategori:'specialty-filter'}, 'kategori'), ['specialty-filter']);
+  uji('T2 qList ganda', qList({kategori:'specialty-filter,kopi-tanpa-ampas'}, 'kategori'),
+      ['specialty-filter','kopi-tanpa-ampas']);
 
   function jml(fn){ return PRODUCTS.filter(fn).length; }
   uji('T2 promo diskon',   jml(function(p){ return PROMO_FACETS[0].uji(p); }), 4);
@@ -7511,10 +7603,10 @@ UJI_SUITE.push(function(){
   // gagal, ganti dulu state demo ke normal sebelum membaca sisanya.
   uji('T3 state demo normal', demoProducts().length, 12);
   uji('T3 tanpa filter mengembalikan semua', ids({}).length, 12);
-  uji('T3 satu kategori', ids({kategori:'klasik'}), ['p1','p7','p8']);
-  uji('T3 dua kategori = ATAU', ids({kategori:'klasik,drip'}).length, 5);
-  uji('T3 dua grup = DAN', ids({kategori:'infused', sangrai:'2'}).length, 5);
-  uji('T3 grup berbeda menyempitkan', ids({kategori:'drip', sangrai:'4'}), []);
+  uji('T3 satu kategori', ids({kategori:'specialty-espresso'}), ['p5','p6']);
+  uji('T3 dua kategori = ATAU', ids({kategori:'specialty-espresso,kopi-tanpa-ampas'}).length, 4);
+  uji('T3 dua grup = DAN', ids({kategori:'specialty-filter', sangrai:'2'}).length, 6);
+  uji('T3 grup berbeda menyempitkan', ids({kategori:'specialty-filter', sangrai:'4'}), []);
   uji('T3 proses washed tidak menarik semi-washed',
       ids({proses:'washed'}), ['p1','p5','p12']);
   uji('T3 promo diskon', ids({promo:'diskon'}), ['p1','p3','p6','p7']);
@@ -7522,16 +7614,16 @@ UJI_SUITE.push(function(){
       PRODUCTS.filter(function(p){ return p.price > 100000; }).length);
   uji('T3 kata kunci', ids({q:'peach'}), ['p4']);
 
-  uji('T3 facetCount kategori infused', facetCount({}, 'kategori', 'infused'), 7);
+  uji('T3 facetCount kategori specialty-filter', facetCount({}, 'kategori', 'specialty-filter'), 6);
   uji('T3 facetCount proses natural', facetCount({}, 'proses', 'natural'), 5);
   uji('T3 facetCount rasa buah', facetCount({}, 'rasa', 'buah'), 8);
   // Grup yang sedang dihitung diabaikan dari filternya sendiri: memilih
-  // Kopi Infused tidak boleh membuat kategori lain jadi nol dan mustahil diklik.
+  // Specialty Filter tidak boleh membuat kategori lain jadi nol dan mustahil diklik.
   uji('T3 facetCount mengabaikan grupnya sendiri',
-      facetCount({kategori:'infused'}, 'kategori', 'klasik'), 3);
+      facetCount({kategori:'specialty-filter'}, 'kategori', 'specialty-espresso'), 2);
   // Tapi grup LAIN tetap membatasi.
   uji('T3 facetCount tetap dibatasi grup lain',
-      facetCount({sangrai:'4'}, 'kategori', 'drip'), 0);
+      facetCount({sangrai:'4'}, 'kategori', 'kopi-tanpa-ampas'), 0);
 
   uji('T3 sort terbaru',
       sortList(PRODUCTS, 'terbaru').map(function(p){ return p.id; })[0], 'p11');
@@ -7541,16 +7633,19 @@ UJI_SUITE.push(function(){
 });
 UJI_SUITE.push(function(){
   // KAT — kategori = jenis produk, tiap produk tepat satu, tidak ada yang kosong.
-  uji('KAT daftar kategori', CATS_ALL, ['Semua','infused','klasik','drip']);
+  uji('KAT daftar kategori mengikuti toko resmi', CATS_ALL,
+      ['Semua','specialty-filter','specialty-espresso','commodity-blend','kopi-tanpa-ampas']);
   uji('KAT tiap produk punya kategori yang dikenal',
       PRODUCTS.filter(function(p){ return !kategoriMeta(p.cat); }).map(function(p){ return p.id; }), []);
   uji('KAT catLabel sama dengan label kategori',
       PRODUCTS.filter(function(p){ return p.catLabel !== katLabel(p.cat); }).map(function(p){ return p.id; }), []);
-  uji('KAT kopi infused = proses mengandung infus (di luar drip)',
-      PRODUCTS.filter(function(p){ return p.cat !== 'drip' && ((p.cat === 'infused') !== /infus/i.test(p.process)); })
-        .map(function(p){ return p.id; }), []);
-  uji('KAT drip bag = produk tanpa pilihan gilingan',
-      PRODUCTS.filter(function(p){ return (p.cat === 'drip') !== (p.grinds === null); }).map(function(p){ return p.id; }), []);
+  uji('KAT pemetaan produk',
+      PRODUCTS.map(function(p){ return p.id+':'+p.cat; }),
+      ['p1:specialty-filter','p2:specialty-filter','p3:specialty-filter','p4:specialty-filter',
+       'p5:specialty-espresso','p6:specialty-espresso','p7:commodity-blend','p8:commodity-blend',
+       'p9:kopi-tanpa-ampas','p10:specialty-filter','p11:specialty-filter','p12:kopi-tanpa-ampas']);
+  uji('KAT kopi tanpa ampas = produk tanpa pilihan gilingan',
+      PRODUCTS.filter(function(p){ return (p.cat === 'kopi-tanpa-ampas') !== (p.grinds === null); }).map(function(p){ return p.id; }), []);
   uji('KAT tidak ada kategori kosong',
       KATEGORI.filter(function(k){ return !PRODUCTS.some(function(p){ return p.cat === k.id; }); }).map(function(k){ return k.id; }), []);
 
@@ -7558,65 +7653,75 @@ UJI_SUITE.push(function(){
   uji('KAT tab aktif beranda', navCatAktif('#/'), null);
   uji('KAT tab aktif PDP', navCatAktif('#/produk/p1'), null);
   uji('KAT tab aktif semua', navCatAktif('#/katalog'), 'semua');
-  uji('KAT tab aktif kategori', navCatAktif('#/katalog?kategori=infused'), 'infused');
-  uji('KAT tab aktif kategori + urutan', navCatAktif('#/katalog?kategori=drip&sort=terbaru'), 'drip');
+  uji('KAT tab aktif kategori', navCatAktif('#/katalog?kategori=specialty-filter'), 'specialty-filter');
+  uji('KAT tab aktif kategori + urutan', navCatAktif('#/katalog?kategori=kopi-tanpa-ampas&sort=terbaru'), 'kopi-tanpa-ampas');
   uji('KAT tab aktif terlaris', navCatAktif('#/katalog?sort=terlaris'), 'terlaris');
   uji('KAT tab aktif promo', navCatAktif('#/katalog?promo=diskon'), 'promo');
-  uji('KAT dua kategori tidak menyorot tab', navCatAktif('#/katalog?kategori=infused%2Cdrip'), null);
-  uji('KAT kategori + filter lain tidak menyorot tab', navCatAktif('#/katalog?kategori=infused&harga=sedang'), null);
+  uji('KAT dua kategori tidak menyorot tab', navCatAktif('#/katalog?kategori=specialty-filter%2Ckopi-tanpa-ampas'), null);
+  uji('KAT kategori + filter lain tidak menyorot tab', navCatAktif('#/katalog?kategori=specialty-filter&harga=sedang'), null);
   uji('KAT kategori tak dikenal tidak menyorot tab', navCatAktif('#/katalog?kategori=Specialty'), null);
 
   // Tautan tab header menunjuk ke URL yang sama dengan yang disorot.
   var tautan = (__HTML_SUMBER__.match(/<a class="nav-cat[^"]*" data-nav="[^"]+" href="[^"]+"/g) || [])
     .map(function(t){ var m = t.match(/data-nav="([^"]+)" href="([^"]+)"/); return [m[1], navCatAktif(m[2])]; });
-  uji('KAT jumlah tab header', tautan.length, 6);
+  uji('KAT jumlah tab header', tautan.length, 7);
   uji('KAT tiap tab menyorot dirinya sendiri',
       tautan.filter(function(x){ return x[0] !== x[1]; }), []);
 
   // Judul halaman katalog mengikuti menu.
-  uji('KAT judul kategori', /Kopi <em>Infused<\/em>/.test(katalogHeadHTML({kategori:'infused'})), true);
+  uji('KAT judul kategori', /Specialty <em>Filter<\/em>/.test(katalogHeadHTML({kategori:'specialty-filter'})), true);
   uji('KAT judul terlaris', /Paling <em>Laris<\/em>/.test(katalogHeadHTML({sort:'terlaris'})), true);
   uji('KAT judul promo', /Sedang <em>Diskon<\/em>/.test(katalogHeadHTML({promo:'diskon'})), true);
   uji('KAT judul bawaan', /Katalog <em>Kopi Sakha<\/em>/.test(katalogHeadHTML({})), true);
 
   // Aturan grosir yang dulu membaca 'Coffee Drip'.
+  uji('KAT satuan katalog grosir kopi tanpa ampas = box',
+      /indexOf\('kopi-tanpa-ampas'\) >= 0\) \? 'box'/.test(viewB2bKatalog.toString()), true);
+  // Tidak boleh ada kode di luar blok uji yang masih memakai nama kategori lama.
+  var kodeProduksi = __HTML_SUMBER__.split('UJI_SUITE')[0];
+  // Tombol "Lihat produk terkait" di artikel memakai a.cat sebagai ?kategori=.
+  uji('KAT kategori artikel dikenal (atau Semua)',
+      ARTICLES.filter(function(a){ return a.cat !== 'Semua' && !kategoriMeta(a.cat); }).map(function(a){ return a.id; }), []);
+  uji('KAT tak ada id kategori lama di kode',
+      ["'Coffee Drip'", "'Espresso Blend'", "'Specialty'", "cat==='drip'", "kategori=infused"]
+        .filter(function(x){ return kodeProduksi.indexOf(x) >= 0; }), []);
   uji('KAT satuan grosir drip = box', b2bUnit(prod('p9')), 'box');
   uji('KAT MOQ grosir drip = 12', b2bMoq(prod('p12')), 12);
   uji('KAT satuan grosir kopi = kg', b2bUnit(prod('p1')), 'kg');
 });
 UJI_SUITE.push(function(){
   uji('T4 URL kosong', katalogURLq({}), '#/katalog');
-  uji('T4 URL satu grup', katalogURLq({kategori:'infused'}),
-      '#/katalog?kategori=infused');
+  uji('T4 URL satu grup', katalogURLq({kategori:'specialty-filter'}),
+      '#/katalog?kategori=specialty-filter');
   uji('T4 URL multi-nilai dikodekan',
-      katalogURLq({kategori:'infused,drip'}),
-      '#/katalog?kategori=infused%2Cdrip');
+      katalogURLq({kategori:'specialty-filter,kopi-tanpa-ampas'}),
+      '#/katalog?kategori=specialty-filter%2Ckopi-tanpa-ampas');
   uji('T4 sort relevan tidak ditulis', katalogURLq({sort:'relevan'}), '#/katalog');
   uji('T4 urutan parameter stabil',
-      katalogURLq({sort:'terbaru', kategori:'infused', promo:'diskon'}),
-      '#/katalog?kategori=infused&promo=diskon&sort=terbaru');
+      katalogURLq({sort:'terbaru', kategori:'specialty-filter', promo:'diskon'}),
+      '#/katalog?kategori=specialty-filter&promo=diskon&sort=terbaru');
   // Bolak-balik: URL yang dibuat harus terbaca lagi jadi nilai yang sama.
-  var asal = {kategori:'infused,drip', sangrai:'2,3', harga:'sedang'};
+  var asal = {kategori:'specialty-filter,kopi-tanpa-ampas', sangrai:'2,3', harga:'sedang'};
   var balik = parseHashQuery(katalogURLq(asal));
-  uji('T4 bolak-balik kategori', qList(balik,'kategori'), ['infused','drip']);
+  uji('T4 bolak-balik kategori', qList(balik,'kategori'), ['specialty-filter','kopi-tanpa-ampas']);
   uji('T4 bolak-balik sangrai', qList(balik,'sangrai'), ['2','3']);
   uji('T4 bolak-balik harga', balik.harga, 'sedang');
   // Pembungkus lama harus tetap menghasilkan tautan yang sah.
-  uji('T4 pembungkus lama', katalogURL('klasik','','',''),
-      '#/katalog?kategori=klasik');
+  uji('T4 pembungkus lama', katalogURL('commodity-blend','','',''),
+      '#/katalog?kategori=commodity-blend');
   uji('T4 pembungkus lama abaikan Semua', katalogURL('Semua','','',''), '#/katalog');
 });
 UJI_SUITE.push(function(){
   uji('T5 label facet proses', labelFacet('proses','semi-washed'), 'Semi-washed');
   uji('T5 label facet rasa', labelFacet('rasa','buah'), 'Buah & Sitrus');
-  uji('T5 label facet kategori dari KATEGORI', labelFacet('kategori','infused'), 'Kopi Infused');
+  uji('T5 label facet kategori dari KATEGORI', labelFacet('kategori','specialty-filter'), 'Specialty Filter');
   uji('T5 label facet harga', labelFacet('harga','sedang'), 'Rp50.000–Rp100.000');
 
   uji('T5 tidak ada filter aktif', filterAktifList({}), []);
   uji('T5 filter aktif lintas grup',
-      filterAktifList({kategori:'infused', proses:'natural', harga:'sedang'})
+      filterAktifList({kategori:'specialty-filter', proses:'natural', harga:'sedang'})
         .map(function(f){ return f.grup + ':' + f.id; }),
-      ['kategori:infused','proses:natural','harga:sedang']);
+      ['kategori:specialty-filter','proses:natural','harga:sedang']);
   uji('T5 filter aktif multi-nilai dalam satu grup',
       filterAktifList({sangrai:'2,3'}).length, 2);
   // sort dan q bukan filter — tidak ikut jadi chip.
@@ -7719,29 +7824,29 @@ UJI_SUITE.push(function(){
 UJI_SUITE.push(function(){
   var simpan = cart.slice();
   cart.length = 0;
-  cart.push({n:'X', p:1, img:'', q:1, pid:'p5', grind:null, sel:true});   // Kopi Infused
-  cart.push({n:'Y', p:1, img:'', q:1, pid:'p1', grind:null, sel:true});   // Kopi Klasik
-  cart.push({n:'Z', p:1, img:'', q:1, pid:'p6', grind:null, sel:false});  // Kopi Infused
+  cart.push({n:'X', p:1, img:'', q:1, pid:'p5', grind:null, sel:true});   // Specialty Espresso
+  cart.push({n:'Y', p:1, img:'', q:1, pid:'p1', grind:null, sel:true});   // Specialty Filter
+  cart.push({n:'Z', p:1, img:'', q:1, pid:'p6', grind:null, sel:false});  // Specialty Espresso
   cart.push({n:'?', p:1, img:'', q:1, pid:'entah', grind:null, sel:true});// tak dikenal
 
   uji('T10 kategori per baris',
       cart.map(cartKategori),
-      ['infused','klasik','infused','Lainnya']);
+      ['specialty-espresso','specialty-filter','specialty-espresso','Lainnya']);
 
   var g = cartGrup();
   uji('T10 urutan grup mengikuti CATS_ALL lalu Lainnya',
       g.map(function(x){ return x.cat; }),
-      ['infused','klasik','Lainnya']);
+      ['specialty-filter','specialty-espresso','Lainnya']);
   uji('T10 indeks anggota grup',
-      g.filter(function(x){ return x.cat==='infused'; })[0].idx, [0,2]);
+      g.filter(function(x){ return x.cat==='specialty-espresso'; })[0].idx, [0,2]);
   uji('T10 baris tak dikenal tidak hilang',
       g.reduce(function(a,x){ return a + x.idx.length; }, 0), cart.length);
   uji('T10 label grup dari catLabel',
-      g[0].label, 'Kopi Infused');
+      g[0].label, 'Specialty Filter');
 
   // Fungsi murni yang diuji — pembungkus cartSetSel* memanggil handleRouting()
   // yang akan merender ulang halaman di tengah uji.
-  cartPilihGrup('infused', true);
+  cartPilihGrup('specialty-espresso', true);
   uji('T10 centang grup mengenai semua anggotanya',
       [cart[0].sel, cart[2].sel], [true, true]);
   uji('T10 centang grup tidak menyentuh grup lain', cart[1].sel, true);
