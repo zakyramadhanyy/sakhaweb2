@@ -451,9 +451,6 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
    11. FOOTER
    ══════════════════════════════════════ */
 .footer{background:var(--blue-vulcan);color:rgba(255,255,255,.55);padding:0 0 0;}
-.footer-trust{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px;padding:20px 24px;font-size:12px;color:var(--tan);border-bottom:1px solid rgba(255,255,255,.08);}
-.footer-trust .sep{color:rgba(255,255,255,.18);}
-.footer-trust b{color:#fff;font-weight:700;}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.1fr;gap:40px;padding:48px 0;border-bottom:1px solid rgba(255,255,255,.08);}
 .footer-links-scroll{display:contents;}
 .footer-col img{height:30px;margin-bottom:16px;}
@@ -523,6 +520,8 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 .mobile-menu{position:fixed;top:0;left:0;height:100vh;height:100dvh;width:280px;background:var(--surface);z-index:301;transform:translateX(-100%);visibility:hidden;transition:transform var(--t-slow),visibility var(--t-slow);padding:20px;}
 .mobile-menu.open{transform:translateX(0);visibility:visible;}
 .mobile-menu,.cart-drawer{overscroll-behavior:contain;}
+.mm-judul{font-family:var(--font-body);font-size:10.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:0;padding:18px 6px 6px;}
+.mm-judul:first-of-type{padding-top:4px;}
 .mobile-menu li a{display:block;padding:12px 6px;font-size:14px;border-bottom:1px solid var(--warm);font-weight:600;}
 
 /* ── Toast ── */
@@ -758,7 +757,6 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
   /* ── Footer (link columns → accordion, satu kolom sejajar penuh lebar) ──
      3 kolom sejajar (10.5px, overflow-wrap:anywhere) kebacaannya buruk di HP —
      diganti akordeon collapsed-by-default, konsisten dgn pola #catAccordion. */
-  .footer-trust{gap:6px 10px;padding:10px 16px;font-size:10px;}
   .footer-col p,.footer-col-desc{display:none;}
   .footer-grid{display:block;padding:14px 0;}
   .footer-grid .footer-col:first-child{padding:0 16px;margin-bottom:12px;}
@@ -982,13 +980,6 @@ button.co-step:hover span{filter:brightness(1.08);}
 @media (max-width:900px){.merch-grid{grid-template-columns:1fr;}}
 
 /* ── AKUN ── */
-.akun-profile{display:flex;align-items:center;gap:16px;}
-.akun-avatar{width:52px;height:52px;border-radius:50%;background:var(--aqua-deep);color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:17px;font-weight:700;flex-shrink:0;}
-.akun-profile span{display:block;font-size:12px;color:var(--muted);margin-top:2px;}
-.akun-shortcuts{display:flex;flex-direction:column;gap:2px;}
-.akun-shortcuts a{padding:12px 6px;font-size:13.5px;color:var(--ink);border-bottom:1px solid var(--border);}
-.akun-shortcuts a:last-child{border-bottom:none;}
-.akun-shortcuts a:hover{color:var(--burnt-sienna);}
 
 /* ── Akun: rel ikon-saja di kiri (bukan sidebar teks) — dipasang di SEMUA
    halaman akun (profil, alamat, ulasan, wishlist, pesanan, poin) supaya
@@ -1716,6 +1707,40 @@ html.locked,body.locked{overflow:hidden;}
   .ocard-foot{flex-wrap:wrap;gap:10px;}
   .ocard-cta{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;}
 }
+
+/* ── MENU AKUN DI PONSEL ───────────────────────────────────────────────
+   Di ponsel rail ikon horizontal sulit dipakai: ikon tanpa teks harus
+   ditebak, dan deretannya melebihi lebar layar sehingga perlu digeser.
+   Diubah jadi daftar menu vertikal — satu tujuan per baris, ikon + teks.
+
+   Labelnya SUDAH ada di DOM sebagai <span class="visually-hidden">, jadi
+   markup tidak perlu diubah sama sekali — cukup ditampilkan kembali di sini.
+   Itu juga sebabnya portal grosir ikut rapi tanpa kodenya disentuh: ia
+   memakai kelas .acct-side yang sama. */
+@media (max-width:767.98px){
+  .acct-side{flex-direction:column;align-items:stretch;overflow-x:visible;gap:0;padding:4px 0;}
+  .acct-side .who{display:none;}
+  .acct-side .gap{width:auto;height:1px;margin:4px 0;}
+  .acct-side a,.acct-side button.acct-link,.acct-side a.acct-link{
+    width:auto;height:auto;border-radius:0;
+    justify-content:flex-start;gap:12px;
+    padding:14px 16px;font-size:14px;font-weight:600;
+    border-bottom:1px solid var(--border);
+  }
+  .acct-side a:last-of-type,.acct-side .keluar{border-bottom:0;margin:0;}
+  .acct-side a.active{
+    background:var(--burnt-sienna-light);color:var(--burnt-sienna);
+    box-shadow:inset 3px 0 0 var(--burnt-sienna);
+  }
+  /* Dibatasi ketat ke .acct-side. Membuka .visually-hidden secara global akan
+     memunculkan seluruh teks khusus pembaca layar di halaman ini.
+     !important diperlukan karena utilitas itu sendiri memakai !important. */
+  .acct-side .visually-hidden{
+    position:static!important;width:auto!important;height:auto!important;
+    margin:0!important;padding:0!important;overflow:visible!important;
+    clip:auto!important;white-space:nowrap!important;border:0!important;
+  }
+}
 </style>
 </head>
 <body data-auth="tamu">
@@ -2182,12 +2207,6 @@ html.locked,body.locked{overflow:hidden;}
 
 <!-- ══ 11. FOOTER ══ -->
 <footer class="footer">
-  <div class="footer-trust">
-    <span>⭐ <b>5.0</b> dari 174rb+ ulasan</span><span class="sep">·</span>
-    <span>🛒 <b>614rb+</b> produk terjual</span><span class="sep">·</span>
-    <span>✓ <b>Halal MUI</b> &amp; BPOM Terdaftar</span><span class="sep">·</span>
-    <span>🔥 Disangrai <b>Fresh</b> Tiap Minggu</span>
-  </div>
   <div class="container footer-grid">
     <div class="footer-col">
       <img src="assets-v2/logowhite.png" alt="Sakha Coffee" decoding="async" loading="lazy" width="305" height="329">
@@ -2271,23 +2290,26 @@ html.locked,body.locked{overflow:hidden;}
 
 <!-- ══ MOBILE MENU ══ -->
 <nav class="mobile-menu" id="mobileMenu" role="dialog" aria-modal="true" aria-label="Menu navigasi" aria-hidden="true">
-  <ul>
+  <h2 class="mm-judul" id="mmUtama">Menu Utama</h2>
+  <ul aria-labelledby="mmUtama">
     <li><a href="#/katalog">Katalog</a></li>
     <li><a href="#/flash-sale">Diskon Kilat</a></li>
     <li><a href="#/artikel">Artikel</a></li>
     <li><a href="#/tentang">Tentang Kami</a></li>
     <li><a href="#/kontak">Kontak Kami</a></li>
     <li><a href="#/outlet">Temukan Outlet</a></li>
-    <li><a href="#/b2b/masuk">Masuk sebagai B2B</a></li>
-    <!-- Blok akun: tamu melihat jalur masuk/daftar/lupa sandi,
-         yang sudah masuk melihat menu akunnya. Ditukar lewat data-auth di <body>. -->
+  </ul>
+  <!-- Blok akun: tamu melihat jalur masuk/daftar/lupa sandi,
+       yang sudah masuk melihat menu akunnya. Ditukar lewat data-auth di <body>. -->
+  <h2 class="mm-judul" id="mmAkun">Akun &amp; Transaksi</h2>
+  <ul aria-labelledby="mmAkun">
     <li class="only-tamu"><a href="#/masuk">Masuk</a></li>
     <li class="only-tamu"><a href="#/daftar">Daftar Akun Baru</a></li>
     <li class="only-tamu"><a href="#/lupa-sandi">Lupa Kata Sandi</a></li>
     <li class="only-reguler"><a href="#/akun">Akun Saya</a></li>
     <li class="only-reguler"><a href="#/pesanan">Pesanan Saya</a></li>
-    <li class="only-reguler"><a href="#/poin">Poin &amp; Voucher</a></li>
     <li class="only-reguler"><a href="#/akun/wishlist">Favorit Saya</a></li>
+    <li class="only-reguler"><a href="#/poin">Poin &amp; Voucher</a></li>
   </ul>
   <!-- Kontrol tema & bahasa juga tersedia di mobile (pill di navbar disembunyikan < 900px) -->
   <div class="mm-prefs">
@@ -4537,6 +4559,8 @@ var ACCT_RAIL_ICONS = {
   wishlist:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z"/></svg>',
   poin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 2.9 6.3 6.9.7-5.2 4.7 1.5 6.8L12 17.3 5.9 20.5l1.5-6.8-5.2-4.7 6.9-.7Z"/></svg>',
   ulasan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3Z"/><path d="M8 8h7M8 12h4"/></svg>',
+  katalog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
+  faktur:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>',
   keluar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>'
 };
 function accountSidebarHTML(active){
@@ -5101,7 +5125,7 @@ var B2B_ACCOUNTS = [
   { user: 'purchasing@kopinusantara.co.id', pass: 'grosir123', nama: 'Rahmat Hidayat', perusahaan: 'PT Kopi Nusantara Sejahtera', npwp: '01.234.567.8-901.000', telepon: '021-5551234', net30: true },
   { user: 'sekar@warungsudutkota.id', pass: 'grosir123', nama: 'Sekar Ayu', perusahaan: 'Warung Sudut Kota', npwp: '02.345.678.9-012.000', telepon: '021-5556789', net30: false },
 ];
-var B2B_SESSION = null; // { nama, perusahaan, npwp, telepon, net30 }
+var B2B_SESSION = null; // { nama, email, perusahaan, npwp, telepon, net30 }
 
 function b2bMoq(p){ return (p.id==='p4'||p.id==='p10') ? 1 : ((p.cat==='kopi-tanpa-ampas') ? 12 : 5); }
 function b2bUnit(p){ return p.cat==='kopi-tanpa-ampas' ? 'box' : 'kg'; }
@@ -5631,24 +5655,47 @@ function unduhFakturB2b(id){
     '<p style="margin-top:10px;font-size:12px;color:#555;text-align:right">Status: '+(inv.lunas?'LUNAS':'BELUM LUNAS')+'</p>';
   cetakDokumen('Faktur '+inv.id, isi);
 }
+// Rel ikon akun grosir — pola & gaya sama dengan accountSidebarHTML() milik B2C.
+function b2bAccountSidebarHTML(active){
+  var initials = B2B_SESSION.nama.split(' ').map(function(x){ return x[0]; }).join('').slice(0,2).toUpperCase();
+  function item(key,label,href){ return '<a class="'+(active===key?'active':'')+'" href="'+href+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" aria-current="'+(active===key?'page':'false')+'">'+ACCT_RAIL_ICONS[key]+'<span class="visually-hidden">'+esc(label)+'</span></a>'; }
+  return '<nav class="acct-side" aria-label="Menu akun grosir">'+
+    '<div class="who" aria-hidden="true">'+initials+'</div>'+
+    item('profil','Profil','#/b2b/akun')+
+    '<div class="gap" aria-hidden="true"></div>'+
+    item('katalog','Katalog Grosir','#/b2b/katalog')+
+    item('pesanan','Riwayat Pesanan','#/b2b/pesanan')+
+    item('wishlist','Favorit Grosir ('+WISHLIST_B2B.length+')','#/b2b/katalog?fav=1')+
+    item('faktur','Faktur & Jatuh Tempo','#/b2b/faktur')+
+    '<a class="acct-link keluar" href="#/" title="Keluar Portal Grosir" aria-label="Keluar Portal Grosir" onclick="return b2bKeluarKonfirm(event)">'+ACCT_RAIL_ICONS.keluar+'<span class="visually-hidden">Keluar Portal Grosir</span></a>'+
+  '</nav>';
+}
 function viewB2bAkun(){
   if(!b2bGate()) return '';
-  return '<div class="pg">'+'<div class="container" style="max-width:640px">'+
-    pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/akun',label:'Akun'}], 'Grosir', 'Akun <em>Grosir</em>')+
-    '<div class="simple-card akun-profile"><div class="akun-avatar">'+esc(B2B_SESSION.nama.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase())+'</div>'+
-      '<div><b>'+esc(B2B_SESSION.nama)+'</b><span>'+esc(B2B_SESSION.perusahaan)+'</span></div></div>'+
-    '<div class="simple-card" style="margin-top:16px">'+
-      '<div class="sum-row"><span>NPWP</span><b>'+esc(B2B_SESSION.npwp)+'</b></div>'+
-      '<div class="sum-row"><span>Telepon</span><b>'+esc(B2B_SESSION.telepon)+'</b></div>'+
-      '<div class="sum-row"><span>Termin</span><b>'+(B2B_SESSION.net30?'NET30 aktif':'Transfer di muka')+'</b></div>'+
+  var S = B2B_SESSION;
+  var initials = S.nama.split(' ').map(function(x){ return x[0]; }).join('').slice(0,2).toUpperCase();
+  // Data grosir berasal dari kontrak perusahaan — ditampilkan, tidak disunting di sini.
+  function baris(lbl, val){ return '<div class="acct-row"><span class="lbl">'+lbl+'</span><span class="val">'+val+'</span></div>'; }
+  var main = '<div class="simple-card">'+
+    '<h1 style="font-size:20px;margin-bottom:4px">Profil Saya</h1>'+
+    '<p style="font-size:13px;color:var(--muted);margin:0">Informasi akun grosir perusahaanmu. Perubahan data perusahaan dilakukan lewat tim Sakha.</p>'+
+    '<div class="acct-form-grid">'+
+    '<div>'+
+      (S.email ? baris('Username', '<span style="color:var(--muted)">'+esc(S.email.split('@')[0])+'</span>') : '')+
+      baris('Nama', esc(S.nama))+
+      (S.email ? baris('Email', maskEmailV2(S.email)) : '')+
+      baris('Nomor Telepon', esc(maskPhoneV2(S.telepon)))+
+      baris('Perusahaan', esc(S.perusahaan))+
+      baris('NPWP', esc(S.npwp))+
+      baris('Termin Pembayaran', S.net30 ? 'NET30 aktif' : 'Transfer di muka')+
     '</div>'+
-    '<div class="akun-shortcuts simple-card" style="margin-top:16px">'+
-      '<a href="#/b2b/katalog">📦 Katalog Grosir</a>'+
-      '<a href="#/b2b/pesanan">📋 Riwayat Pesanan</a>'+
-      '<a href="#/b2b/katalog?fav=1">★ Favorit Grosir ('+WISHLIST_B2B.length+')</a>'+
-      '<a href="#/b2b/faktur">🧾 Faktur &amp; Jatuh Tempo</a>'+
-      '<a href="#/" onclick="return b2bKeluarKonfirm(event)">🚪 Keluar Portal Grosir</a>'+
+    '<div class="acct-photo">'+
+      '<div class="avatar-lg">'+initials+'</div>'+
     '</div>'+
+    '</div></div>';
+  return '<div class="pg"><div class="container">'+
+    pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/akun',label:'Akun'}], 'Akun Grosir', 'Halo, <em>'+esc(S.nama.split(' ')[0])+'</em>')+
+    '<div class="acct-shell">'+b2bAccountSidebarHTML('profil')+main+'</div>'+
   '</div></div>';
 }
 
@@ -5679,7 +5726,7 @@ document.addEventListener('submit', function(e){
       return;
     }
     tandaiSalah('b2bUser','b2bUserErr',''); tandaiSalah('b2bPass','b2bPassErr','');
-    B2B_SESSION = { nama:acc.nama, perusahaan:acc.perusahaan, npwp:acc.npwp, telepon:acc.telepon, net30:acc.net30 };
+    B2B_SESSION = { nama:acc.nama, email:acc.user, perusahaan:acc.perusahaan, npwp:acc.npwp, telepon:acc.telepon, net30:acc.net30 };
     if(typeof saveState === 'function') saveState();
     if(typeof renderAkunMenu === 'function') renderAkunMenu();
     showToast('✓ Masuk sebagai '+acc.perusahaan+'.');
@@ -6052,7 +6099,7 @@ var PHRASES = {
   // navigasi & chrome
   'Semua':'All', 'Specialty Filter':'Specialty Filter', 'Specialty Espresso':'Specialty Espresso', 'Commodity Blend':'Commodity Blend', 'Kopi Tanpa Ampas':'Drip Bags', 'Tanpa Ampas':'Drip Bags',
   'Terlaris':'Best Sellers', 'Promo':'Deals', 'Alat Seduh':'Brewing Gear',
-  'Masuk sebagai B2B':'Sign in as B2B', 'Bahasa':'Language', 'Tampilan':'Appearance', 'Keranjang':'Cart', 'Akun':'Account', 'Wishlist':'Wishlist',
+  'Masuk sebagai B2B':'Sign in as B2B', 'Menu Utama':'Main menu', 'Akun & Transaksi':'Account & orders', 'Bahasa':'Language', 'Tampilan':'Appearance', 'Keranjang':'Cart', 'Akun':'Account', 'Wishlist':'Wishlist',
   'Beranda':'Home', 'Katalog':'Catalog', 'Artikel':'Articles', 'Kontak':'Contact', 'Bantuan':'Help',
   'Outlet':'Outlets', 'Tentang':'About', 'Pesanan':'Orders', 'Poin':'Points', 'Cari':'Search',
   'Kategori':'Categories', 'Profil':'Profile', 'Masuk':'Sign in', 'Daftar':'Register', 'Keluar':'Sign out',
@@ -7657,6 +7704,49 @@ UJI_SUITE.push(function(){
       /\.ocard-foot\{[^}]*flex-wrap:\s*wrap/.test(hp), true);
   uji('OVF kelompok tombol boleh turun baris',
       /\.ocard-cta\{[^}]*flex-wrap:\s*wrap/.test(hp), true);
+});
+
+UJI_SUITE.push(function(){
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var css = sumber.slice(sumber.indexOf('<style>'), sumber.indexOf('</style>'));
+  function blok(syarat){
+    var kumpul = '', dari = 0, i;
+    while((i = css.indexOf('@media ' + syarat, dari)) >= 0){
+      var j = css.indexOf('{', i), d = 0, k;
+      for(k = j; k < css.length; k++){
+        if(css[k] === '{') d++;
+        else if(css[k] === '}'){ d--; if(!d) break; }
+      }
+      kumpul += css.slice(j, k); dari = k;
+    }
+    return kumpul;
+  }
+  var hp = blok('(max-width:767.98px)');
+
+  uji('MENU rail akun jadi kolom di ponsel',
+      /\.acct-side\{[^}]*flex-direction:\s*column/.test(hp), true);
+  uji('MENU item menjadi baris selebar penuh, bukan lingkaran',
+      /\.acct-side a[^{]*\{[^}]*justify-content:\s*flex-start/.test(hp), true);
+
+  // Label sudah ada di DOM sebagai .visually-hidden; di ponsel ia menjadi teks
+  // menu yang sesungguhnya. Butuh !important karena utilitas .visually-hidden
+  // sendiri memakai !important.
+  uji('MENU label ditampilkan sebagai teks menu',
+      /\.acct-side \.visually-hidden\{[^}]*position:\s*static\s*!important/.test(hp), true);
+
+  // Pembatasan itu WAJIB: kalau .visually-hidden dibuka global, seluruh teks
+  // khusus pembaca layar di halaman ini akan bocor jadi terlihat.
+  var global = /(^|})\s*\.visually-hidden\{[^}]*position:\s*static/.test(hp);
+  uji('MENU utilitas visually-hidden tidak dibuka secara global', global, false);
+
+  // Markup tidak berubah: label tetap dirender lewat span visually-hidden,
+  // sehingga jalur B2B ikut rapi tanpa kodenya disentuh.
+  uji('MENU markup sidebar tidak diubah',
+      /visually-hidden/.test(String(accountSidebarHTML('pesanan'))), true);
+  // Diperiksa lewat sumber fungsinya, bukan dipanggil: memanggilnya butuh
+  // sesi grosir aktif, dan uji tidak boleh bergantung pada keadaan login.
+  uji('MENU sidebar B2B memakai kelas yang sama',
+      /class="acct-side"/.test(String(b2bAccountSidebarHTML)), true);
 });
 
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
