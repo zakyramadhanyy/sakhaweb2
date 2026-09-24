@@ -4586,7 +4586,10 @@ var ACCT_RAIL_ICONS = {
   katalog:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
   faktur:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h4"/></svg>',
   keluar:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>'
-};
+};// Menu akun memakai ikon yang sama dengan faktur di sidebar grosir —
+// tujuannya memang sama, jadi tidak perlu ikon baru.
+ACCT_RAIL_ICONS.grosir = ACCT_RAIL_ICONS.faktur;
+
 function accountSidebarHTML(active){
   var initials = USER.name.split(' ').map(function(x){ return x[0]; }).join('').slice(0,2).toUpperCase();
   function item(key,label,href){ return '<a class="'+(active===key?'active':'')+'" href="'+href+'" title="'+esc(label)+'" aria-label="'+esc(label)+'" aria-current="'+(active===key?'page':'false')+'">'+ACCT_RAIL_ICONS[key]+'<span class="visually-hidden">'+esc(label)+'</span></a>'; }
@@ -4604,7 +4607,7 @@ function accountSidebarHTML(active){
     // Akun eceran tidak perlu melihat menu yang tak pernah dipakainya; calon
     // pembeli grosir tetap menemukannya lewat menu hamburger.
     (B2B_SESSION
-      ? '<div class="gap" aria-hidden="true"></div>'+item('faktur','Grosir & Faktur','#/b2b')
+      ? '<div class="gap" aria-hidden="true"></div>'+item('grosir','Grosir & Faktur','#/akun/grosir')
       : '')+
     '<button class="acct-link keluar" type="button" title="Keluar" aria-label="Keluar" onclick="keluarReguler()">'+ACCT_RAIL_ICONS.keluar+'<span class="visually-hidden">Keluar</span></button>'+
   '</nav>';
@@ -5387,8 +5390,41 @@ function viewB2bLupa(){
       '<p class="auth-foot"><a href="#/b2b/masuk">\u2190 Kembali ke halaman masuk</a></p>'
   });
 }
-function viewB2bHome(){
+function viewAkunGrosir(){
+  // Ringkasan grosir hidup di halaman akun, bukan portal terpisah: isinya —
+  // termin pembayaran, faktur belum lunas, nilai terutang — adalah informasi
+  // tingkat akun, bukan etalase.
   if(!b2bGate()) return '';
+  var belum = INVOICES.filter(function(i){ return !i.lunas; });
+  var terutang = belum.reduce(function(a,i){ return a+i.total; }, 0);
+  var main = '<div class="simple-card">'+
+      '<h3 style="margin:0 0 4px">'+esc(B2B_SESSION.perusahaan)+'</h3>'+
+      '<p style="font-size:13px;color:var(--muted);margin:0 0 20px">Semua harga di halaman grosir sudah harga berjenjang untuk akunmu.</p>'+
+      '<div class="b2b-stat-grid">'+
+        '<div class="simple-card"><span class="b2b-stat-label">Termin Pembayaran</span><b class="b2b-stat-val">'+(B2B_SESSION.net30?'NET30 aktif':'Transfer di muka')+'</b></div>'+
+        '<div class="simple-card"><span class="b2b-stat-label">Faktur Belum Lunas</span><b class="b2b-stat-val">'+belum.length+' faktur</b></div>'+
+        '<div class="simple-card"><span class="b2b-stat-label">Nilai Terutang</span><b class="b2b-stat-val">'+rupiah(terutang)+'</b></div>'+
+      '</div>'+
+      '<div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">'+
+        '<a class="btn btn-primary" href="#/b2b/katalog">Lihat Katalog Grosir</a>'+
+        '<a class="btn btn-ghost" href="#/b2b/pesanan">Riwayat Pesanan</a>'+
+        '<a class="btn btn-ghost" href="#/b2b/faktur">Faktur &amp; Jatuh Tempo</a>'+
+      '</div>'+
+    '</div>';
+  return '<div class="pg"><div class="container">'+
+    pgHead([{href:'#/',label:'Beranda'},{href:'#/akun',label:'Akun'},{href:'#/akun/grosir',label:'Grosir & Faktur'}], 'Akun', 'Grosir &amp; <em>Faktur</em>')+
+    '<div class="acct-shell">'+accountSidebarHTML('grosir')+main+'</div>'+
+  '</div></div>';
+}
+
+function viewB2bHome(){
+  // Isinya sudah pindah ke #/akun/grosir. Rute ini dipertahankan sebagai
+  // pengalihan supaya seluruh rujukan lama tetap bekerja tanpa disentuh:
+  // tujuan setelah login grosir, tombol home di bilah bawah ponsel, dan
+  // breadcrumb lama.
+  if(!b2bGate()) return '';
+  navigate('#/akun/grosir');
+  return '';
   var belum = INVOICES.filter(function(i){ return !i.lunas; });
   var terutang = belum.reduce(function(a,i){ return a+i.total; },0);
   var featured = PRODUCTS.slice(0,8);
@@ -5788,6 +5824,7 @@ var ROUTES = [
   { re:/^#\/akun\/wishlist$/, view:function(){ return viewWishlist(); } },
   { re:/^#\/akun\/alamat$/, view:function(){ return viewAlamat(); } },
   { re:/^#\/akun\/ulasan$/, view:function(){ return viewUlasan(); } },
+  { re:/^#\/akun\/grosir$/, view:function(){ return viewAkunGrosir(); } },
   { re:/^#\/artikel$/, view:function(){ return viewArtikel(); } },
   { re:/^#\/artikel\/([\w-]+)$/, view:function(m){ return viewArtikelDetail(m[1]); } },
   { re:/^#\/tentang$/, view:function(){ return viewTentang(); } },
@@ -7808,14 +7845,64 @@ UJI_SUITE.push(function(){
     var dengan = accountSidebarHTML('pesanan');
     uji('GROSIR menu muncul saat sesi grosir aktif',
         /Grosir &amp; Faktur|Grosir & Faktur/.test(dengan), true);
-    uji('GROSIR menu mengarah ke portal grosir',
-        /href="#\/b2b"/.test(dengan), true);
+    // Tujuannya berpindah dari #/b2b ke #/akun/grosir saat isinya dipindahkan
+    // ke halaman akun; #/b2b kini hanya pengalihan.
+    uji('GROSIR menu mengarah ke halaman grosir di akun',
+        /href="#\/akun\/grosir"/.test(dengan), true);
 
     // Jumlah item bertambah tepat satu, bukan menggeser atau menggandakan.
     function jml(h){ return (h.match(/<a /g) || []).length; }
     uji('GROSIR hanya satu item yang ditambahkan', jml(dengan) - jml(tanpa), 1);
   } finally {
     B2B_SESSION = simpan;
+  }
+});
+
+UJI_SUITE.push(function(){
+  var simpanS = B2B_SESSION, simpanH = location.hash;
+  var asliNav = navigate, tujuan = [];
+  navigate = function(h){ tujuan.push(h); };
+  try {
+    B2B_SESSION = { nama:'Budi', email:'a@b.c', perusahaan:'PT Uji', npwp:'-', telepon:'-', net30:true };
+
+    // Ringkasan grosir kini hidup di halaman akun, bukan portal terpisah.
+    var h = viewAkunGrosir();
+    // Sidebar B2B memakai kelas .acct-side yang SAMA, jadi memeriksa kelasnya
+    // tidak membedakan apa pun. Yang membedakan adalah isi menunya: "Ulasan
+    // Saya" dan "Poin & Voucher" hanya ada di sidebar konsumen.
+    uji('B2BAKUN memakai sidebar akun konsumen, bukan sidebar grosir',
+        /Ulasan Saya/.test(h) && /Poin &amp; Voucher/.test(h), true);
+    uji('B2BAKUN tidak memakai menu khas portal grosir',
+        /Favorit Grosir/.test(h), false);
+    uji('B2BAKUN memuat termin pembayaran', /Termin Pembayaran/.test(h), true);
+    uji('B2BAKUN memuat faktur belum lunas', /Faktur Belum Lunas/.test(h), true);
+    uji('B2BAKUN memuat nilai terutang', /Nilai Terutang/.test(h), true);
+    uji('B2BAKUN memuat ketiga tombol',
+        /#\/b2b\/katalog/.test(h) && /#\/b2b\/pesanan/.test(h) && /#\/b2b\/faktur/.test(h), true);
+
+    // Etalase produk sengaja tidak ikut pindah: halaman akun bukan etalase.
+    uji('B2BAKUN tidak menampilkan grid produk', /class="product-grid"/.test(h), false);
+
+    // #/b2b dialihkan, supaya seluruh rujukan lama tetap bekerja tanpa disentuh.
+    tujuan.length = 0;
+    viewB2bHome();
+    uji('B2BAKUN rute #/b2b dialihkan ke halaman akun',
+        tujuan.indexOf('#/akun/grosir') >= 0, true);
+
+    // Menu sidebar mengarah ke rumah barunya.
+    uji('B2BAKUN menu Grosir & Faktur menunjuk rute baru',
+        /href="#\/akun\/grosir"/.test(accountSidebarHTML('grosir')), true);
+
+    // Tanpa sesi grosir halaman ini tidak boleh terbuka.
+    B2B_SESSION = null;
+    tujuan.length = 0;
+    viewAkunGrosir();
+    uji('B2BAKUN tanpa sesi grosir dilempar ke masuk grosir',
+        tujuan.indexOf('#/b2b/masuk') >= 0, true);
+  } finally {
+    navigate = asliNav;
+    B2B_SESSION = simpanS;
+    location.hash = simpanH;
   }
 });
 
