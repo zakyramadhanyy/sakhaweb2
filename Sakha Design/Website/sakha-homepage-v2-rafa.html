@@ -1080,12 +1080,6 @@ button.co-step:hover span{filter:brightness(1.08);}
 /* ══════════════════════════════════════
    PORTAL B2B — mode grosir (topbar, kartu harga bertingkat, faktur)
    ══════════════════════════════════════ */
-.b2b-topbar{background:var(--blue-vulcan);color:#fff;}
-.b2b-topbar-inner{display:flex;align-items:center;gap:14px;padding:10px 24px;font-size:12.5px;flex-wrap:wrap;}
-.b2b-mode-tag{background:var(--tan);color:var(--ink);font-weight:800;font-size:10.5px;letter-spacing:.5px;padding:4px 11px;border-radius:var(--radius-pill);}
-.b2b-company{color:rgba(255,255,255,.75);}
-.b2b-topbar .btn-ghost{border-color:rgba(255,255,255,.3);color:#fff;}
-.b2b-topbar .btn-ghost:hover{border-color:#fff;}
 
 .b2b-badge{background:var(--blue-vulcan);color:var(--tan);}
 /* teks tombol lebih panjang drpd konsumen ("Tambah 12 box" dst) — padding
@@ -1192,7 +1186,6 @@ html[data-theme="dark"] body{background:var(--white-paper);color:var(--ink);}
 html[data-theme="dark"] .section-head h2 em,
 html[data-theme="dark"] .pg-head h1 em{color:#7bded1;}
 html[data-theme="dark"] mark,
-html[data-theme="dark"] .b2b-mode-tag{color:#111921;}
 html[data-theme="dark"] input,
 html[data-theme="dark"] textarea,
 html[data-theme="dark"] select{background:var(--warm);color:var(--ink);border-color:var(--border);}
@@ -1299,6 +1292,19 @@ html[data-theme="dark"] .gal-slider img{filter:brightness(.92);}
 }
 
 .sort-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:0 0 14px;}
+.filter-ikon{align-items:center;justify-content:center;padding:0!important;width:42px;height:42px;flex:0 0 42px;margin-left:auto;}
+/* Di bawah 900px ikon filter tampil: tab urutan + ikon harus muat satu baris. */
+@media (max-width:900px){
+  .sort-tabs{flex-wrap:nowrap;gap:8px;overflow-x:auto;scrollbar-width:none;}
+  .sort-tabs::-webkit-scrollbar{display:none;}
+  .sort-tabs .filter-tab:not(.filter-ikon){padding-left:12px;padding-right:12px;flex-shrink:0;}
+}
+@media (max-width:380px){
+  .sort-tabs{gap:6px;}
+  .sort-tabs .filter-tab:not(.filter-ikon){padding-left:9px;padding-right:9px;}
+}
+.filter-ikon svg{width:18px;height:18px;}
+.filter-ikon[aria-expanded="true"]{border-color:var(--burnt-sienna);color:var(--burnt-sienna);}
 .chips-aktif-row{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px;align-items:center;}
 .chip-aktif{cursor:pointer;border:1.5px solid var(--burnt-sienna);color:var(--burnt-sienna);}
 .chip-clear{cursor:pointer;border:0;background:none;color:var(--muted);text-decoration:underline;font-size:12px;}
@@ -1692,6 +1698,23 @@ html.locked,body.locked{overflow:hidden;}
   .qty-stepper{order:3;}
   .cr-price{order:4;min-width:auto;margin-left:auto;text-align:right;}
   .cr-aksi{order:5;flex-basis:100%;flex-direction:row;justify-content:flex-end;gap:14px;align-items:center;}
+}
+
+/* ── HALAMAN AKUN / PESANAN / POIN DI PONSEL ───────────────────────────
+   Item grid dan flex punya min-width:auto secara bawaan: mereka menolak
+   menyusut di bawah lebar konten alaminya. Akibatnya .simple-card melebar
+   mengikuti total lebar semua tab filter, .acct-shell ikut melebar, dan
+   seluruh halaman meluap ke samping — sementara overflow-x:auto pada
+   .filter-tabs tidak pernah aktif karena induknya dibiarkan tumbuh.
+   min-width:0 yang melepaskan kuncian itu, bukan overflow-nya. */
+@media (max-width:767.98px){
+  .acct-shell > *{min-width:0;}
+  .filter-tabs{min-width:0;}
+  /* Pesanan "Menunggu Pembayaran" memunculkan dua tombol panjang sekaligus
+     (Bayar Sekarang + Batalkan Pesanan); bersama harga, totalnya melebihi
+     ruang yang tersedia. */
+  .ocard-foot{flex-wrap:wrap;gap:10px;}
+  .ocard-cta{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;}
 }
 </style>
 </head>
@@ -3264,7 +3287,7 @@ function katalogReset(){
   navigate(katalogURLq({ q: q.q || '' }));
 }
 
-// Di bawah 900px sidebar disembunyikan dan dibuka lewat tombol ⚙ Filter.
+// Di bawah 900px sidebar disembunyikan dan dibuka lewat tombol ikon filter di baris urutan.
 function toggleKatalogSidebar(btn){
   __katalogFilterBuka = !__katalogFilterBuka;
   var sb = document.getElementById('katalogSidebar');
@@ -3337,6 +3360,9 @@ function katalogSortHTML(q){
   var caret = (sort === 'harga-turun') ? '▼' : '▲';
   tabs += '<button type="button" class="filter-tab'+(hargaOn?' active':'')+'" aria-pressed="'+hargaOn+'" onclick="katalogToggleHargaSort()">Harga <span aria-hidden="true">'+caret+'</span>'+
           '<span class="visually-hidden">'+(sort === 'harga-turun' ? 'tertinggi dulu' : 'terendah dulu')+'</span></button>';
+  // Pembuka filter (hanya < 900px, saat sidebar tersembunyi) berupa ikon, sebaris dengan tab urutan.
+  tabs += '<button type="button" class="filter-tab filter-ikon katalog-filter-toggle" aria-label="Filter" title="Filter" aria-expanded="'+__katalogFilterBuka+'" aria-controls="katalogSidebar" onclick="toggleKatalogSidebar(this)">'+
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg></button>';
   return '<div class="sort-tabs" role="group" aria-label="Urutkan produk">'+tabs+'</div>';
 }
 
@@ -3440,7 +3466,6 @@ function viewKatalog(q){
         '<div class="katalog-main">'+
           '<div class="cat-toolbar">'+
             '<span class="count grow">'+list.length+' produk ditemukan</span>'+
-            '<button type="button" class="filter-toggle katalog-filter-toggle" aria-expanded="'+__katalogFilterBuka+'" aria-controls="katalogSidebar" onclick="toggleKatalogSidebar(this)">⚙ Filter</button>'+
           '</div>'+
           katalogSortHTML(q)+
           katalogChipsHTML(q)+
@@ -5218,13 +5243,6 @@ function pcardB2bHTML(p){
     '</div>';
 }
 
-function b2bTopbarHTML(){
-  if(!B2B_SESSION) return '';
-  return '<div class="b2b-topbar"><div class="container b2b-topbar-inner">'+
-    '<span class="b2b-mode-tag">MODE GROSIR</span><span class="b2b-company">'+esc(B2B_SESSION.perusahaan)+'</span>'+
-    '<button class="btn btn-ghost btn-sm" type="button" onclick="b2bKeluarKonfirm(event)" style="margin-left:auto">Keluar Portal Grosir</button>'+
-  '</div></div>';
-}
 function b2bLogout(){ B2B_SESSION=null; cartB2b={items:[]}; }
 // FIX 1.8 — keluar portal grosir MENGOSONGKAN keranjang grosir. Itu aksi
 // merusak, jadi ikut pola konfirmasi() seperti aksi merusak lain di app ini.
@@ -5320,7 +5338,7 @@ function viewB2bHome(){
   var belum = INVOICES.filter(function(i){ return !i.lunas; });
   var terutang = belum.reduce(function(a,i){ return a+i.total; },0);
   var featured = PRODUCTS.slice(0,8);
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container">'+
+  return '<div class="pg">'+'<div class="container">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'}], 'Portal Grosir Sakha', 'Halo, <em>'+esc(B2B_SESSION.nama)+'</em>', 'Semua harga di halaman ini adalah harga grosir untuk '+esc(B2B_SESSION.perusahaan)+', sudah mengikuti tabel harga bertingkat per produk.')+
     '<div class="b2b-stat-grid">'+
       '<div class="simple-card"><span class="b2b-stat-label">Termin Pembayaran</span><b class="b2b-stat-val">'+(B2B_SESSION.net30?'NET30 aktif':'Transfer di muka')+'</b></div>'+
@@ -5353,7 +5371,7 @@ function viewB2bKatalog(q){
                                    'Filternya terlalu sempit \u2014 coba lepas satu, atau atur ulang semuanya.',
                                    '<button class="btn btn-secondary" type="button" onclick="katalogReset()">Atur Ulang Filter</button>');
   var satuan = (qList(q,'kategori').indexOf('kopi-tanpa-ampas') >= 0) ? 'box' : 'kg';
-  return '<div class="pg katalog-pg">'+b2bTopbarHTML()+
+  return '<div class="pg katalog-pg">'+
     '<div class="container">'+
       pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/katalog',label:'Katalog'}], 'Grosir', 'Katalog <em>Harga Grosir</em>', 'Harga per satuan turun otomatis begitu kuantitasmu melewati ambang tier.')+
       '<div class="katalog-body">'+
@@ -5362,7 +5380,6 @@ function viewB2bKatalog(q){
           '<div class="cat-toolbar">'+
             '<span class="count grow" id="b2bKatalogCount" role="status" aria-live="polite">'+list.length+' produk \u00B7 harga per '+satuan+'</span>'+
             '<button type="button" class="filter-toggle" aria-pressed="'+(q.fav==='1')+'" onclick="katalogSetTunggal(\'fav\',\'1\')">'+(q.fav==='1'?'\u2605 Favorit':'\u2606 Favorit')+'</button>'+
-            '<button type="button" class="filter-toggle katalog-filter-toggle" aria-expanded="'+__katalogFilterBuka+'" aria-controls="katalogSidebar" onclick="toggleKatalogSidebar(this)">\u2699 Filter</button>'+
           '</div>'+
           katalogSortHTML(q)+
           katalogChipsHTML(q)+
@@ -5377,7 +5394,7 @@ function viewB2bProduk(id){
   var tiers = b2bTierTable(p);
   var unit = b2bUnit(p), moq = b2bMoq(p);
   var tierRows = tiers.map(function(t,i){ return '<tr'+(i===0?' class="on"':'')+'><td>'+t.min+(t.max===Infinity?'+':'–'+t.max)+' '+unit+'</td><td>'+rupiah(t.harga)+' / '+unit+'</td></tr>'; }).join('');
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container">'+
+  return '<div class="pg">'+'<div class="container">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/katalog',label:'Katalog'},{href:'#',label:p.name}], p.catLabel, '')+
     '<div class="pdp-grid">'+
       '<div class="pdp-gallery"><div class="pdp-main-img"><img data-img="'+p.img+'" alt="'+esc(p.name)+'"></div></div>'+
@@ -5402,7 +5419,7 @@ function viewB2bKeranjang(){
   if(!b2bGate()) return '';
   var t = b2bCartTotals();
   if(!t.lines.length){
-    return '<div class="pg">'+b2bTopbarHTML()+'<div class="container">'+
+    return '<div class="pg">'+'<div class="container">'+
       pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/keranjang',label:'Keranjang'}], 'Grosir', 'Keranjang <em>Grosir</em>')+
       emptyState('📦','Keranjang grosirmu masih kosong', 'Mulai dari katalog harga grosir kami.', '<a class="btn btn-primary" href="#/b2b/katalog">Buka Katalog Grosir</a>')+
     '</div></div>';
@@ -5414,7 +5431,7 @@ function viewB2bKeranjang(){
       '<button class="cr-link" type="button" onclick="b2bHapusBaris(\''+l.p.id+'\')">Hapus</button></div>';
   }).join('');
   var issues = b2bMoqIssues();
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container">'+
+  return '<div class="pg">'+'<div class="container">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/keranjang',label:'Keranjang'}], 'Grosir', 'Keranjang <em>Grosir</em>')+
     b2bMoqWarnHTML()+
     '<div class="cart-grid"><div class="cart-list">'+rows+'</div>'+
@@ -5483,7 +5500,7 @@ function viewB2bCheckout(){
       '<div style="display:flex;gap:10px;margin-top:16px"><button class="btn btn-ghost" type="button" onclick="b2bSetStep(2)">← Kembali</button>'+
       '<button class="btn btn-primary" style="flex:1" type="button" onclick="b2bPlaceOrder()">Buat Pesanan Grosir</button></div></div>';
   }
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container">'+
+  return '<div class="pg">'+'<div class="container">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/keranjang',label:'Keranjang'},{href:'#/b2b/checkout',label:'Checkout'}], 'Grosir', 'Checkout <em>Grosir</em>')+
     langkah+
     '<div class="checkout-grid">'+body+
@@ -5543,7 +5560,7 @@ function viewB2bPesanan(){
         '<button class="btn btn-secondary btn-sm" type="button" onclick="b2bPesanUlang(\''+o.id+'\')">Pesan Ulang</button>'+
       '</div></div>';
   }).join('') : emptyState('📋','Belum ada riwayat pesanan','Pesanan grosir yang kamu buat akan tercatat di sini.','<a class="btn btn-secondary" href="#/b2b/katalog">Buka Katalog Grosir</a>');
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container">'+
+  return '<div class="pg">'+'<div class="container">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/pesanan',label:'Riwayat Pesanan'}], 'Grosir', 'Riwayat <em>Pesanan</em>', 'Pesan ulang komposisi yang sama tanpa menyusun keranjang dari nol.')+
     '<div class="simple-card">'+rows+'</div>'+
   '</div></div>';
@@ -5558,7 +5575,7 @@ function viewB2bFaktur(){
       '<div class="sum-row"><span>Jatuh tempo</span><b>'+i.jatuhTempo+'</b></div>'+
       '<div class="ocard-foot"><b>'+rupiah(i.total)+'</b><a class="btn btn-ghost btn-sm" href="#/b2b/faktur/'+i.id+'">Lihat Rincian</a></div></div>';
   }).join('');
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container">'+
+  return '<div class="pg">'+'<div class="container">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/faktur',label:'Faktur'}], 'Grosir', 'Faktur &amp; <em>Jatuh Tempo</em>')+
     (lewat.length ? '<div class="alert-inline alert-danger">⚠️ '+lewat.length+' faktur lewat tempo — lunasi supaya termin NET'+NET30_HARI+' tetap aktif.</div>' : '')+
     '<div class="b2b-stat-grid">'+
@@ -5574,7 +5591,7 @@ function viewB2bFakturDetail(id){
   var inv = findInvoice(id);
   if(!inv) return notFoundSimple('Faktur tidak ditemukan','Nomor faktur tidak valid.');
   var st = fakturStatus(inv);
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container" style="max-width:640px">'+
+  return '<div class="pg">'+'<div class="container" style="max-width:640px">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/faktur',label:'Faktur'},{href:'#',label:inv.id}], 'Grosir', esc(inv.id))+
     '<div class="simple-card">'+
       '<div class="sum-row"><span>Status</span><b class="ostatus ostatus-faktur-'+st.id+'">'+st.label+'</b></div>'+
@@ -5616,7 +5633,7 @@ function unduhFakturB2b(id){
 }
 function viewB2bAkun(){
   if(!b2bGate()) return '';
-  return '<div class="pg">'+b2bTopbarHTML()+'<div class="container" style="max-width:640px">'+
+  return '<div class="pg">'+'<div class="container" style="max-width:640px">'+
     pgHead([{href:'#/b2b',label:'Portal Grosir'},{href:'#/b2b/akun',label:'Akun'}], 'Grosir', 'Akun <em>Grosir</em>')+
     '<div class="simple-card akun-profile"><div class="akun-avatar">'+esc(B2B_SESSION.nama.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase())+'</div>'+
       '<div><b>'+esc(B2B_SESSION.nama)+'</b><span>'+esc(B2B_SESSION.perusahaan)+'</span></div></div>'+
@@ -7605,6 +7622,41 @@ UJI_SUITE.push(function(){
   var ikon = 36, ham = 44, gap = 8, logo = 111;
   var tetap = (nav === null) ? Infinity : (ham + ikon * 3 + gap * 3 + nav * 2);
   uji('GUT navbar masih muat di layar 320px', (320 - tetap) >= logo, true);
+});
+
+UJI_SUITE.push(function(){
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var css = sumber.slice(sumber.indexOf('<style>'), sumber.indexOf('</style>'));
+  function blok(syarat){
+    var kumpul = '', dari = 0, i;
+    while((i = css.indexOf('@media ' + syarat, dari)) >= 0){
+      var j = css.indexOf('{', i), d = 0, k;
+      for(k = j; k < css.length; k++){
+        if(css[k] === '{') d++;
+        else if(css[k] === '}'){ d--; if(!d) break; }
+      }
+      kumpul += css.slice(j, k); dari = k;
+    }
+    return kumpul;
+  }
+  var hp = blok('(max-width:767.98px)');
+
+  // Item grid & flex punya min-width:auto secara bawaan — mereka menolak
+  // menyusut di bawah lebar kontennya. Akibatnya .simple-card melebar
+  // mengikuti total lebar semua tab, .acct-shell ikut melebar, dan halaman
+  // meluap ke samping. overflow-x:auto pada .filter-tabs tidak pernah aktif
+  // karena induknya dibiarkan tumbuh.
+  uji('OVF item .acct-shell boleh menyusut',
+      /\.acct-shell\s*>\s*\*\{[^}]*min-width:\s*0/.test(hp), true);
+  uji('OVF filter-tabs boleh menyusut sehingga bisa digeser',
+      /\.filter-tabs\{[^}]*min-width:\s*0/.test(hp), true);
+
+  // Baris harga+tombol: dua tombol terpanjang ("Bayar Sekarang" +
+  // "Batalkan Pesanan") plus harga melebihi ruang yang tersedia.
+  uji('OVF baris harga & tombol boleh turun baris',
+      /\.ocard-foot\{[^}]*flex-wrap:\s*wrap/.test(hp), true);
+  uji('OVF kelompok tombol boleh turun baris',
+      /\.ocard-cta\{[^}]*flex-wrap:\s*wrap/.test(hp), true);
 });
 
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
