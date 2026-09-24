@@ -177,15 +177,6 @@ body:not([data-auth="tamu"]) .only-tamu{display:none !important;}
 }
 
 /* ── Gratis ongkir progress (homepage, gamified ala Otten) ── */
-.ship-bar{background:var(--cream);border-bottom:1px solid var(--border);}
-.ship-bar-inner{display:flex;align-items:center;gap:10px;padding:9px 24px;max-width:1240px;margin:0 auto;flex-wrap:wrap;row-gap:6px;}
-.ship-bar-icon{color:var(--burnt-sienna);flex-shrink:0;display:flex;}
-.ship-bar-icon svg{width:15px;height:15px;}
-.ship-bar-inner span{font-size:12px;color:var(--ink);min-width:0;}
-.ship-bar-inner span b{color:var(--burnt-sienna);font-weight:700;}
-.ship-bar-track{flex:1;min-width:70px;max-width:220px;height:6px;background:rgba(17,25,33,.08);border-radius:10px;overflow:hidden;}
-.ship-bar-fill{height:100%;background:var(--burnt-sienna);border-radius:10px;transition:width var(--t-base);}
-@media (max-width:700px){.ship-bar-inner{padding:8px 16px;}.ship-bar-inner span{font-size:11px;}.ship-bar-track{max-width:90px;}}
 
 /* ── home-mobile-quick: blok akses cepat ala Otten, hanya tampil di mobile
    (sejajar breakpoint header 768px) — isi memakai fitur asli Sakha (outlet,
@@ -1156,13 +1147,6 @@ html[data-theme="dark"] .gal-slider img{filter:brightness(.92);}
 @media (prefers-reduced-motion:reduce){.ticker-track{animation:none;}}
 
 /* ── Mode bar (tamu / reguler / grosir) ── */
-.modebar{background:var(--aqua-deep);color:#fff;font-size:12px;}
-.modebar-in{max-width:1240px;margin:0 auto;padding:7px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.modebar-lbl{font-weight:800;letter-spacing:.4px;text-transform:uppercase;font-size:10.5px;background:rgba(255,255,255,.16);padding:3px 9px;border-radius:var(--radius-pill);}
-.modebar-org{font-weight:600;opacity:.95;}
-.modebar-sw{margin-left:auto;background:transparent;border:1px solid rgba(255,255,255,.45);color:#fff;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:var(--radius-pill);}
-.modebar-sw:hover{background:rgba(255,255,255,.15);}
-@media (max-width:768px){.modebar-in{padding:7px 16px;}}
 
 /* ── Kontrol chrome: tema, bahasa, dropdown akun ── */
 .chrome-pill{display:inline-flex;align-items:center;background:var(--warm);border:1.5px solid var(--border);border-radius:var(--radius-pill);overflow:hidden;flex-shrink:0;}
@@ -1554,7 +1538,6 @@ body.locked{overflow:hidden;}
   <button class="announcement-close" id="announcementClose" aria-label="Tutup pengumuman">✕</button>
 </div>
 <!-- Mode bar: penanda mode tamu / reguler / grosir + tombol pindah mode -->
-<div class="modebar" id="modeBar" hidden></div>
 
 <!-- ══ 2. NAVIGATION ══ -->
 <header class="navbar">
@@ -1625,14 +1608,6 @@ body.locked{overflow:hidden;}
 
 <div id="homeView">
 <!-- ══ Gratis ongkir progress bar (visible di homepage, gamified ala Otten) ══ -->
-<div class="ship-bar">
-  <div class="ship-bar-inner">
-    <span class="ship-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="13" height="11"/><path d="M14 10h4l4 4v3h-8z"/><circle cx="6" cy="19" r="2"/><circle cx="17.5" cy="19" r="2"/></svg></span>
-    <span id="shipBarMsgHome">Tambah <b>Rp45.000</b> lagi untuk <b>Gratis Ongkir!</b></span>
-    <div class="ship-bar-track"><div class="ship-bar-fill" id="shipBarFillHome" style="width:78%"></div></div>
-  </div>
-</div>
-
 <!-- ══ Home mobile quick-access (pola Otten dkk) — hanya tampil di mobile.
      Semua tautan menuju fitur Sakha yang sudah ada: outlet, poin, artikel,
      grosir/B2B, flash sale — bukan fitur baru. ══ -->
@@ -2586,10 +2561,6 @@ function renderCart(){
     : '';
   document.getElementById('shippingFill').style.width=pct+'%';
   document.getElementById('shippingMsg').innerHTML = catatanPilih + (remaining>0
-    ? `Tambah <b>${fmtRupiah(remaining)}</b> lagi untuk <b>Gratis Ongkir!</b>`
-    : `🎉 Kamu dapat <b>Gratis Ongkir!</b>`);
-  document.getElementById('shipBarFillHome').style.width=pct+'%';
-  document.getElementById('shipBarMsgHome').innerHTML = catatanPilih + (remaining>0
     ? `Tambah <b>${fmtRupiah(remaining)}</b> lagi untuk <b>Gratis Ongkir!</b>`
     : `🎉 Kamu dapat <b>Gratis Ongkir!</b>`);
   // Modul Integrasi WhatsApp: isi pesan panel keranjang otomatis berisi ringkasan isi keranjang + total
@@ -5354,7 +5325,6 @@ document.addEventListener('submit', function(e){
     tandaiSalah('b2bUser','b2bUserErr',''); tandaiSalah('b2bPass','b2bPassErr','');
     B2B_SESSION = { nama:acc.nama, perusahaan:acc.perusahaan, npwp:acc.npwp, telepon:acc.telepon, net30:acc.net30 };
     if(typeof saveState === 'function') saveState();
-    if(typeof renderModeBar === 'function') renderModeBar();
     if(typeof renderAkunMenu === 'function') renderAkunMenu();
     showToast('✓ Masuk sebagai '+acc.perusahaan+'.');
     navigate('#/b2b');
@@ -5984,36 +5954,16 @@ function applyHeroGreet(){
     ? '👋 Halo! Masuk atau daftar dulu — pesanan, poin, dan favoritmu jadi tersimpan'
     : slideGreet;
 }
-function renderModeBar(){
-  updateAuthChrome();
-  var bar = document.getElementById('modeBar');
-  if(!bar) return;
-  var mode = modeAktif();
-  if(mode === 'grosir'){
-    bar.hidden = false;
-    bar.innerHTML = '<div class="modebar-in"><span class="modebar-lbl">Mode Grosir</span>'+
-      '<span class="modebar-org">'+esc(B2B_SESSION.perusahaan)+'</span>'+
-      '<button class="modebar-sw" type="button" onclick="keKonsumen()">Ke akun reguler</button></div>';
-  } else if(mode === 'tamu'){
-    bar.hidden = false;
-    bar.innerHTML = '<div class="modebar-in"><span class="modebar-lbl">Mode Tamu</span>'+
-      '<span class="modebar-org">Belum masuk — pesanan & poin belum tersimpan di akun</span>'+
-      '<button class="modebar-sw" type="button" onclick="navigate(\'#/masuk\')">Masuk</button></div>';
-  } else {
-    bar.hidden = true; bar.innerHTML = '';
-  }
-  if(typeof setMobileNavH === 'function') setMobileNavH();
-}
 function keKonsumen(){
   if(typeof b2bLogout === 'function') b2bLogout();
-  saveState(); navigate('#/'); renderModeBar(); updateCartBadgeForMode(); updateB2bChrome();
+  saveState(); navigate('#/'); updateCartBadgeForMode(); updateB2bChrome();
   showToast('Kembali ke akun reguler.');
 }
-function masukReguler(){ APP_STATE.reguler = true; saveState(); renderModeBar(); renderAkunMenu(); }
+function masukReguler(){ APP_STATE.reguler = true; saveState(); renderAkunMenu(); }
 function keluarReguler(){
   // H3 — keluar akun memutus sesi; minta konfirmasi seperti aksi merusak lainnya.
   konfirmasi('Keluar dari akun?', 'Kamu perlu masuk lagi untuk melihat pesanan, poin, dan alamat tersimpan. Isi keranjang tetap aman.', 'Ya, keluar', function(){
-    APP_STATE.reguler = false; saveState(); tutupAkunMenu(); renderModeBar(); renderAkunMenu();
+    APP_STATE.reguler = false; saveState(); tutupAkunMenu(); renderAkunMenu();
     navigate('#/'); showToast('Kamu keluar dari akun.');
   });
 }
@@ -6173,7 +6123,6 @@ window.addEventListener('beforeunload', function(){
 
 window.addEventListener('DOMContentLoaded', function(){
   renderCart();
-  renderModeBar();
   renderAkunMenu();
   applyFilterHome();
   if(APP_STATE.lang === 'en') translateTree(document.body);
@@ -6181,7 +6130,7 @@ window.addEventListener('DOMContentLoaded', function(){
     b.setAttribute('aria-pressed', String(b.getAttribute('data-lang') === APP_STATE.lang));
   });
 });
-window.addEventListener('hashchange', function(){ tutupAkunMenu(); renderModeBar(); });
+window.addEventListener('hashchange', function(){ tutupAkunMenu(); });
 
 </script>
 <script>
@@ -6871,7 +6820,6 @@ function sesudahRender(){
   var routed = document.getElementById('routedView');
   if(routed && !routed.classList.contains('hidden')) translateTree(routed);
   pasangArtSentinel();
-  renderModeBar();
 }
 var __handleRoutingAsli = handleRouting;
 handleRouting = function(){ __handleRoutingAsli(); sesudahRender(); };
@@ -7004,6 +6952,45 @@ UJI_SUITE.push(function(){
     ORDERS.length = 0; simpanO.forEach(function(o){ ORDERS.push(o); });
     delete __ulasDraft[ulasKey('SKH-UJI','p1')];
   }
+});
+
+UJI_SUITE.push(function(){
+  var sumber = (typeof __HTML_SUMBER__ !== 'undefined') ? __HTML_SUMBER__ : '';
+  var markup = sumber.replace(/<script\b[\s\S]*?<\/script>/gi, '');
+
+  // Bar mode dibuang seluruhnya.
+  uji('BAR elemen modeBar hilang dari markup', /id="modeBar"/.test(markup), false);
+  uji('BAR kelas .modebar hilang dari markup', /class="modebar"/.test(markup), false);
+  uji('BAR fungsi renderModeBar tidak ada lagi', typeof renderModeBar, 'undefined');
+  // Pemanggil yang tertinggal akan melempar saat halaman dimuat.
+  uji('BAR tidak ada pemanggil renderModeBar yang tertinggal',
+      /renderModeBar\s*\(/.test(sumber), false);
+  // Jalan keluar dari mode grosir lewat menu akun harus tetap ada.
+  uji('BAR keKonsumen tetap tersedia', typeof keKonsumen, 'function');
+
+  // Bar gratis ongkir beranda dibuang — tapi HANYA yang di beranda.
+  uji('ONGKIR bar beranda hilang dari markup', /class="ship-bar"/.test(markup), false);
+  // Diperiksa pada MARKUP dan pada sumber fungsinya, bukan pada seluruh berkas:
+  // teks uji ini sendiri menyebut nama elemen tersebut, sehingga memindai
+  // seluruh berkas akan selalu cocok dengan dirinya sendiri dan tidak pernah lulus.
+  uji('ONGKIR elemen bar beranda hilang dari markup',
+      /shipBar(Msg|Fill)Home/.test(markup), false);
+  var sumberRender = String(typeof __renderCartAsli === 'function' ? __renderCartAsli : renderCart);
+  uji('ONGKIR renderCart tidak lagi menulis ke bar beranda',
+      /shipBar(Msg|Fill)Home/.test(sumberRender), false);
+  uji('ONGKIR renderCart masih menulis ke bar drawer keranjang',
+      /shippingMsg/.test(sumberRender) && /shippingFill/.test(sumberRender), true);
+
+  // Yang HARUS bertahan.
+  uji('ONGKIR bar progres di drawer keranjang tetap ada',
+      /id="shippingMsg"/.test(markup) && /id="shippingFill"/.test(markup), true);
+  // Ticker menduplikasi isinya untuk animasi berjalan tanpa jeda, jadi kedua
+  // salinan harus utuh. Memeriksa "ada atau tidak" saja akan lolos meski satu
+  // salinan terhapus dan animasinya jadi timpang.
+  uji('ONGKIR kedua salinan teks promo ticker tetap ada',
+      (markup.match(/GRATIS ONGKIR<\/b> pembelian/g) || []).length, 2);
+  uji('ONGKIR kebijakan di PDP tetap ada',
+      /Gratis ongkir kurir reguler/.test(sumber), true);
 });
 
 if(location.hash.indexOf('selftest') >= 0){ setTimeout(selfTest, 400); }
